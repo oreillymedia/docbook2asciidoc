@@ -10,4 +10,6 @@ http://sourceforge.net/projects/saxon/files/Saxon-HE/9.2/saxonhe9-2-1-5j.zip/dow
 
 Run a command like this to output the AsciiDoc:
 
+---
 java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl
+---
