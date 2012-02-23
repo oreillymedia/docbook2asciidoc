@@ -1,4 +1,4 @@
-This is a stylesheet for transforming DocBook 4.5 to http://www.methods.co.nz/asciidoc/[AsciiDoc].
+This is a stylesheet for transforming DocBook 4.5 to http://www.methods.co.nz/asciidoc/[AsciiDoc], originally started by https://github.com/bjepson[bjepson].
 
 == Dependencies
 
