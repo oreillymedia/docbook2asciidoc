@@ -11,3 +11,10 @@ Run a command like this to output the AsciiDoc:
 ----
 java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl
 ----
+
+If you'd like the AsciiDoc output to be "chunked" into separate files for each preface/chapter/appendix, add the parameter
++chunk-output=true+:
+
+----
+java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl chunk-output=true
+----
