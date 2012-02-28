@@ -4,7 +4,95 @@
  >
 
 <xsl:output method="text" />
+<xsl:param name="chunk-output">false</xsl:param>
 
+<xsl:template match="/">
+  <xsl:choose>
+    <xsl:when test="$chunk-output != 'false'">
+      <xsl:apply-templates select="*" mode="chunk"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:apply-templates/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
+<xsl:template match="book/title" mode="#all">
+  <xsl:variable name="title-text" select="normalize-space(.)"/>
+  <xsl:value-of select="$title-text"/>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:call-template name="title-markup">
+    <xsl:with-param name="title-length" select="string-length($title-text)"/>
+  </xsl:call-template>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+</xsl:template>
+
+<xsl:template name="title-markup">
+  <!-- Recursive loop to generate = markup under title -->
+  <xsl:param name="title-length"/>
+  <xsl:text>=</xsl:text>
+  <xsl:variable name="length-minus-one" select="$title-length - 1"/>
+  <xsl:if test="$length-minus-one &gt; 0">
+    <xsl:call-template name="title-markup">
+      <xsl:with-param name="title-length" select="$length-minus-one"/>
+    </xsl:call-template>
+  </xsl:if>
+</xsl:template>
+
+<xsl:template match="bookinfo" mode="#all"/>
+
+<xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
+  <xsl:variable name="doc-name">
+    <xsl:choose>
+      <xsl:when test="self::chapter">
+        <xsl:text>ch</xsl:text>
+	<xsl:number count="chapter" level="any" format="01"/>
+      </xsl:when>
+      <xsl:when test="self::appendix">
+        <xsl:text>app</xsl:text>
+	<xsl:number count="appendix" level="any" format="a"/>
+      </xsl:when>
+      <xsl:when test="self::preface">
+	<xsl:text>pr</xsl:text>
+	<xsl:number count="preface" level="any" format="01"/>
+      </xsl:when>
+      <xsl:when test="self::colophon">
+        <xsl:text>colo</xsl:text>
+        <xsl:if test="count(//colophon) &gt; 1">
+	  <xsl:number count="colo" level="any" format="01"/>
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="self::dedication">
+        <xsl:text>dedication</xsl:text>
+        <xsl:if test="count(//dedication) &gt; 1">
+	  <xsl:number count="dedication" level="any" format="01"/>
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="self::glossary">
+        <xsl:text>glossary</xsl:text>
+        <xsl:if test="count(//glossary) &gt; 1">
+	  <xsl:number count="glossary" level="any" format="01"/>
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="self::bibliography">
+        <xsl:text>bibliography</xsl:text>
+        <xsl:if test="count(//bibliography) &gt; 1">
+	  <xsl:number count="bibliography" level="any" format="01"/>
+        </xsl:if>
+      </xsl:when>
+    </xsl:choose>
+    <xsl:text>.asc</xsl:text>
+  </xsl:variable>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:text>include::</xsl:text>
+    <xsl:value-of select="$doc-name"/>
+    <xsl:text>[]</xsl:text>
+  <xsl:result-document method="text" href="{$doc-name}">
+    <xsl:apply-templates select="." mode="#default"/>
+  </xsl:result-document>
+</xsl:template>
 <xsl:template match="indexterm" />
 
 <xsl:template match="para/text()">
@@ -206,10 +294,10 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:if test="title">
 .<xsl:apply-templates select="title"/>
 </xsl:if>
-<xsl:apply-templates select="screen"/>
+<xsl:apply-templates select="programlisting|screen"/>
 </xsl:template>
 
-<xsl:template match="screen">
+<xsl:template match="programlisting|screen">
 ----
 <xsl:apply-templates/>
 ----
