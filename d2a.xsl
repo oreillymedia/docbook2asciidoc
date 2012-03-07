@@ -3,7 +3,7 @@
  xmlns:xs="http://www.w3.org/2001/XMLSchema"
  >
 
-<xsl:output method="text" />
+<xsl:output method="xml" omit-xml-declaration="yes"/>
 <xsl:param name="chunk-output">false</xsl:param>
 
 <xsl:template match="/">
@@ -89,7 +89,7 @@
     <xsl:text>include::</xsl:text>
     <xsl:value-of select="$doc-name"/>
     <xsl:text>[]</xsl:text>
-  <xsl:result-document method="text" href="{$doc-name}">
+  <xsl:result-document href="{$doc-name}">
     <xsl:apply-templates select="." mode="#default"/>
   </xsl:result-document>
 </xsl:template>
@@ -304,6 +304,11 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
+<xsl:template match="programlisting[*]|screen[*]">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+</xsl:template>
 
 <xsl:template match="co"><xsl:variable name="curr" select="@id"/>&lt;<xsl:value-of select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>&gt;</xsl:template>
 
