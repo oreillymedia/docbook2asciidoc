@@ -5,6 +5,8 @@
 
 <xsl:output method="xml" omit-xml-declaration="yes"/>
 <xsl:param name="chunk-output">false</xsl:param>
+<xsl:preserve-space elements="*"/>
+<xsl:strip-space elements="table row entry tgroup thead"/>
 
 <xsl:template match="/">
   <xsl:choose>
@@ -166,6 +168,25 @@
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
+<xsl:template match="entry/para">
+<xsl:if test="@id">
+[[<xsl:value-of select="@id"/>]]
+</xsl:if>
+<xsl:apply-templates select="node()"/>
+<xsl:choose>
+<xsl:when test="following-sibling::para">
+  <!-- Two carriage returns if para has following para siblings in the same entry -->
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+</xsl:when>
+<xsl:when test="parent::entry[not(following-sibling::entry)]">
+  <!-- One carriage return if last para in last entry in row -->
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+</xsl:when>
+</xsl:choose>
+</xsl:template>
+
+
 <xsl:template match="tip">
 <xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
 [TIP]
@@ -318,23 +339,20 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 </xsl:if>
 .<xsl:apply-templates select="title"/>
 |===============
-<xsl:apply-templates select="*[not(self::title)]"/>
+<xsl:apply-templates select="descendant::row"/>
 |===============
-</xsl:template>
-
-<xsl:template match="tgroup">
-<xsl:apply-templates/>
-</xsl:template>
-
-<xsl:template match="thead/row">
-<xsl:for-each select="entry">|<xsl:apply-templates/></xsl:for-each>
+<xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
-<xsl:template match="tbody/row">
-<xsl:for-each select="entry">|<xsl:value-of select="para"/></xsl:for-each>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:template match="row">
+  <xsl:for-each select="entry">
+    <xsl:text>|</xsl:text>
+    <xsl:apply-templates/>
+  </xsl:for-each>
 </xsl:template>
+
+
 
 </xsl:stylesheet>
 
