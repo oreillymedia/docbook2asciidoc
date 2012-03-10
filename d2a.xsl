@@ -245,6 +245,8 @@
 
 <xsl:template match="xref">&lt;&lt;<xsl:value-of select="@linkend" />&gt;&gt;</xsl:template>
 
+<xsl:template match="link">&lt;&lt;<xsl:value-of select="@linkend" />,<xsl:value-of select="."/>&gt;&gt;</xsl:template>
+
 <xsl:template match="variablelist">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
@@ -333,17 +335,32 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 <xsl:template match="co"><xsl:variable name="curr" select="@id"/>&lt;<xsl:value-of select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>&gt;</xsl:template>
 
-<xsl:template match="table">
+<xsl:template match="table|informaltable">
 <xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+[[<xsl:value-of select="@id"/>]]</xsl:if>
+<xsl:if test="title">
 .<xsl:apply-templates select="title"/>
+</xsl:if>
+<xsl:if test="descendant::thead">
+[options="header"]</xsl:if>
 |===============
 <xsl:apply-templates select="descendant::row"/>
 |===============
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
+
+<xsl:template match="sidebar">
+<xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
+.<xsl:apply-templates select="title"/>
+****
+<xsl:apply-templates select="*[not(title)]"/>
+****
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+</xsl:template>
+
+
 
 <xsl:template match="row">
   <xsl:for-each select="entry">
