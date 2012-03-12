@@ -187,6 +187,11 @@
 </xsl:template>
 
 
+<xsl:template match="footnote/para">
+<!--Special handling for footnote paras to contract whitespace-->
+<xsl:apply-templates select="node()"/>
+</xsl:template>
+
 <xsl:template match="tip">
 <xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
 [TIP]
@@ -317,7 +322,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:if test="title">
 .<xsl:apply-templates select="title"/>
 </xsl:if>
-<xsl:apply-templates select="programlisting|screen"/>
+====<xsl:apply-templates select="programlisting|screen"/>====
 </xsl:template>
 
 <xsl:template match="programlisting|screen">
@@ -327,7 +332,15 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
+<!-- Passthrough for code listings that have child elements (inlines) -->
 <xsl:template match="programlisting[*]|screen[*]">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+</xsl:template>
+
+<!-- Also use passthrough for examples that have code listings with child elements (inlines) -->
+<xsl:template match="example[descendant::programlisting[*]]|example[descendant::screen[*]]">
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
@@ -360,8 +373,6 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
-
-
 <xsl:template match="row">
   <xsl:for-each select="entry">
     <xsl:text>|</xsl:text>
@@ -370,6 +381,11 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 </xsl:template>
 
 
+<xsl:template match="footnote">
+  <xsl:text>footnote:[</xsl:text>
+  <xsl:apply-templates/>
+  <xsl:text>]</xsl:text>
+</xsl:template>
 
 </xsl:stylesheet>
 
