@@ -84,7 +84,7 @@
         </xsl:if>
       </xsl:when>
     </xsl:choose>
-    <xsl:text>.asc</xsl:text>
+    <xsl:text>.asciidoc</xsl:text>
   </xsl:variable>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
