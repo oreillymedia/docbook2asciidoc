@@ -42,7 +42,16 @@
   </xsl:if>
 </xsl:template>
 
-<xsl:template match="bookinfo" mode="#all"/>
+<xsl:template match="bookinfo" mode="#all">
+  <xsl:variable name="title-text" select="title/normalize-space(.)"/>
+  <xsl:value-of select="$title-text"/>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:call-template name="title-markup">
+    <xsl:with-param name="title-length" select="string-length($title-text)"/>
+  </xsl:call-template>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+</xsl:template>
 
 <xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
   <xsl:variable name="doc-name">
@@ -84,7 +93,7 @@
         </xsl:if>
       </xsl:when>
     </xsl:choose>
-    <xsl:text>.asciidoc</xsl:text>
+    <xsl:text>.asc</xsl:text>
   </xsl:variable>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -120,7 +129,20 @@
 </xsl:template>
 
 <xsl:template match="chapter">
+<xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
+</xsl:if>
+== <xsl:apply-templates select="title"/>
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:apply-templates select="*[not(self::title)]"/>
+</xsl:template>
+
+<xsl:template match="appendix">
+<xsl:if test="@id">
+[[<xsl:value-of select="@id"/>]]
+</xsl:if>
+[appendix]
 == <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -128,7 +150,9 @@
 </xsl:template>
 
 <xsl:template match="preface">
+<xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
+</xsl:if>
 == <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -136,7 +160,9 @@
 </xsl:template>
 
 <xsl:template match="sect1">
+<xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
+</xsl:if>
 === <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -144,7 +170,9 @@
 </xsl:template>
 
 <xsl:template match="sect2">
+<xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
+</xsl:if>
 ==== <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -152,7 +180,9 @@
 </xsl:template>
 
 <xsl:template match="sect3">
+<xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
+</xsl:if>
 ===== <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -265,6 +295,9 @@
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
 </xsl:if>
+<xsl:if test="@spacing">
+[options="<xsl:value-of select="@spacing"/>"]
+</xsl:if>
 <xsl:for-each select="listitem">
 * <xsl:apply-templates/>
 </xsl:for-each>
@@ -273,6 +306,9 @@
 <xsl:template match="orderedlist">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
+</xsl:if>
+<xsl:if test="@spacing">
+[options="<xsl:value-of select="@spacing"/>"]
 </xsl:if>
 <xsl:for-each select="listitem">
 . <xsl:apply-templates/>
@@ -378,6 +414,9 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     <xsl:text>|</xsl:text>
     <xsl:apply-templates/>
   </xsl:for-each>
+    <xsl:if test="not (entry/para)">
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    </xsl:if>
 </xsl:template>
 
 
@@ -385,6 +424,17 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:text>footnote:[</xsl:text>
   <xsl:apply-templates/>
   <xsl:text>]</xsl:text>
+</xsl:template>
+
+<xsl:template match="section">
+  <xsl:if test="@id">
+[[<xsl:value-of select="@id"/>]]
+  </xsl:if>
+  <xsl:sequence select="string-join (('&#10;&#10;', for $i in (1 to count (ancestor::section) + 3) return '='),'')"/>
+  <xsl:apply-templates select="title"/>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 </xsl:stylesheet>
