@@ -43,14 +43,17 @@
 </xsl:template>
 
 <xsl:template match="bookinfo" mode="#all">
-  <xsl:variable name="title-text" select="title/normalize-space(.)"/>
-  <xsl:value-of select="$title-text"/>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
-  <xsl:call-template name="title-markup">
-    <xsl:with-param name="title-length" select="string-length($title-text)"/>
-  </xsl:call-template>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <!-- Process bookinfo/title if it exists, and there is no book/title, which gets primacy -->
+  <xsl:if test="title and not(/book/title)">
+    <xsl:variable name="title-text" select="title/normalize-space(.)"/>
+    <xsl:value-of select="$title-text"/>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:call-template name="title-markup">
+      <xsl:with-param name="title-length" select="string-length($title-text)"/>
+    </xsl:call-template>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+  </xsl:if>
 </xsl:template>
 
 <xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
