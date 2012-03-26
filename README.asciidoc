@@ -2,7 +2,7 @@ This is a stylesheet for transforming DocBook 4.5 to http://www.methods.co.nz/as
 
 == Dependencies
 
-The XSLT is written in XSLT 2.0, so you'll need to run it with an XSLT 2.0 processor. You can use http://sourceforge.net/projects/saxon/files/Saxon-HE/9.2/saxonhe9-2-1-5j.zip/download[Saxon].
+The XSLT is written in XSLT 2.0, so you'll need to run it with an XSLT 2.0 processor. You can use http://sourceforge.net/projects/saxon/files/Saxon-HE/9.2/saxonhe9-2-1-5j.zip/download[Saxon], which is included in this repo..
 
 == Run It
 
@@ -18,3 +18,35 @@ If you'd like the AsciiDoc output to be "chunked" into separate files for each p
 ----
 java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl chunk-output=true
 ----
+
+== Example
+
+This example shows how to run this script for a subversion repository
+
+First, you have to clone this repo so that you'll have the code.  
+
+----
+$ git clone https://MakerPress@github.com/oreillymedia/docbook2asciidoc.git
+----
+
+Second, pull down the repo for the book you want:
+
+----
+$ svn checkout https://prod.oreilly.com/internal/books/9781449307110/
+----
+
+Third, make a new directory where the asciidoc files will go:
+
+----
+$ cd ~/Desktop
+$ mkdir test
+$ cd test
+----
+
+Finally, run the file command to convert the big docbook file into separate asciidoc files.  Note that you'll need Java 1.5 [*NEED TO CONFIRM VERSION*] or higher.  You'll also need to add hardcoded paths to the saxon jar file and to :
+
+----
+java -jar /Users/odewahn/Desktop/docbook2asciidoc/saxon9he.jar -s /Users/odewahn/Desktop/9781449307110/current/book.xml -o book.asc /Users/odewahn/Desktop/docbook2asciidoc/d2a.xsl chunk-output=true
+----
+
+
