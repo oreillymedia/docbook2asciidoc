@@ -123,8 +123,30 @@
 <xsl:sequence select="replace(., '\n\s+', ' ', 'm')"/>
 </xsl:template>
 
-<xsl:template match="term/text()">
-<xsl:sequence select="replace(replace(., '^\s+', '', 'm'), '\s+$', '', 'm')"/>
+<!-- Strip leading whitespace from first text node in <term>, if it does not have preceding element siblings --> 
+<xsl:template match="term[count(element()) != 0]/text()[1][not(preceding-sibling::element())]">
+  <xsl:call-template name="strip-whitespace">
+    <xsl:with-param name="text-to-strip" select="."/>
+    <xsl:with-param name="leading-whitespace" select="'strip'"/>
+  </xsl:call-template>
+</xsl:template>
+
+<!-- Strip trailing whitespace from last text node in <term>, if it does not have following element siblings --> 
+<xsl:template match="term[count(element()) != 0]/text()[not(position() = 1)][last()][not(following-sibling::element())]">
+  <xsl:call-template name="strip-whitespace">
+    <xsl:with-param name="text-to-strip" select="."/>
+    <xsl:with-param name="trailing-whitespace" select="'strip'"/>
+  </xsl:call-template>
+</xsl:template>
+
+<!-- If term has just one text node (no element children), just normalize space in it -->
+<xsl:template match="term[count(element()) = 0]/text()">
+  <xsl:value-of select="normalize-space(.)"/>
+</xsl:template>
+
+<!-- Text nodes in <term> that are between elements that contain only whitespace should be normalized to one space -->
+<xsl:template match="term/text()[not(position() = 1)][not(position() = last())][matches(., '^[\s\n]+$', 'm')]">
+  <xsl:value-of select="replace(., '^[\s\n]+$', ' ', 'm')"/>
 </xsl:template>
 
 <xsl:template match="member/text()">
@@ -438,6 +460,27 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:text xml:space="preserve">&#10;</xsl:text>
   <xsl:text xml:space="preserve">&#10;</xsl:text>
   <xsl:apply-templates select="*[not(self::title)]"/>
+</xsl:template>
+
+<!-- Utility templates -->
+
+<xsl:template name="strip-whitespace">
+  <!-- Assumption is that $text-to-strip will be a text() node --> 
+  <xsl:param name="text-to-strip" select="."/>
+  <!-- By default, don't strip any whitespace -->
+  <xsl:param name="leading-whitespace"/>
+  <xsl:param name="trailing-whitespace"/>
+  <xsl:choose>
+    <xsl:when test="($leading-whitespace = 'strip') and ($trailing-whitespace = 'strip')">
+      <xsl:value-of select="replace(replace(., '^\s+', '', 'm'), '\s+$', '', 'm')"/>
+    </xsl:when>
+    <xsl:when test="$leading-whitespace = 'strip'">
+      <xsl:value-of select="replace(., '^\s+', '', 'm')"/>
+    </xsl:when>
+    <xsl:when test="$trailing-whitespace = 'strip'">
+      <xsl:value-of select="replace(., '\s+$', '', 'm')"/>
+    </xsl:when>
+  </xsl:choose>
 </xsl:template>
 
 </xsl:stylesheet>
