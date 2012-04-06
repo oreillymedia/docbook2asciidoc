@@ -281,9 +281,9 @@
 
 <xsl:template match="email"><xsl:value-of select="normalize-space(.)" /></xsl:template>
 
-<xsl:template match="xref">&lt;&lt;<xsl:value-of select="@linkend" />&gt;&gt;</xsl:template>
+<xsl:template match="xref"><xsl:value-of select="'&lt;&lt;'" disable-output-escaping="yes"/><xsl:value-of select="@linkend" /><xsl:value-of select="'&gt;&gt;'" disable-output-escaping="yes"/></xsl:template>
 
-<xsl:template match="link">&lt;&lt;<xsl:value-of select="@linkend" />,<xsl:value-of select="."/>&gt;&gt;</xsl:template>
+<xsl:template match="link"><xsl:value-of select="'&lt;&lt;'" disable-output-escaping="yes"/><xsl:value-of select="@linkend" />,<xsl:value-of select="."/><xsl:value-of select="'&gt;&gt;'" disable-output-escaping="yes"/></xsl:template>
 
 <xsl:template match="variablelist">
 <xsl:if test="@id">
