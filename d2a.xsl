@@ -109,8 +109,19 @@
 </xsl:template>
 <xsl:template match="indexterm" />
 
-<xsl:template match="para/text()">
-<xsl:sequence select="replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm')"/>
+<xsl:template match="para/text()|simpara/text()">
+<xsl:variable name="paratmp">
+   <xsl:value-of select="replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm')"/>
+</xsl:variable>
+<!-- now remove whitespace, except after emphasis or literal -->
+<xsl:choose>
+<xsl:when test="not(preceding-sibling::node () [1] [self::emphasis]) and not(preceding-sibling::node () [1] [self::literal])">
+<xsl:sequence select="replace($paratmp, '^\s+', '')"/>
+</xsl:when>
+<xsl:otherwise>
+<xsl:sequence select="$paratmp"/>
+</xsl:otherwise>
+</xsl:choose>
 </xsl:template>
 
 <xsl:template match="phrase/text()"><xsl:text/><xsl:sequence select="replace(., '\n\s+', ' ', 'm')"/><xsl:text/></xsl:template>
@@ -192,7 +203,7 @@
 <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
-<xsl:template match="para">
+<xsl:template match="para|simpara">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
 </xsl:if>
@@ -201,13 +212,13 @@
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
-<xsl:template match="entry/para">
+<xsl:template match="entry/para|entry/simpara">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
 </xsl:if>
 <xsl:apply-templates select="node()"/>
 <xsl:choose>
-<xsl:when test="following-sibling::para">
+<xsl:when test="following-sibling::para|following-sibling::simpara">
   <!-- Two carriage returns if para has following para siblings in the same entry -->
   <xsl:text xml:space="preserve">&#10;</xsl:text>
   <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -283,7 +294,7 @@
 
 <xsl:template match="xref">&lt;&lt;<xsl:value-of select="@linkend" />&gt;&gt;</xsl:template>
 
-<xsl:template match="link">&lt;&lt;<xsl:value-of select="@linkend" />,<xsl:value-of select="."/>&gt;&gt;</xsl:template>
+<xsl:template match="link"><xsl:value-of select="'&lt;&lt;'" disable-output-escaping="yes"/><xsl:value-of select="@linkend" />,<xsl:value-of select="."/><xsl:value-of select="'&gt;&gt;'" disable-output-escaping="yes"/></xsl:template>
 
 <xsl:template match="variablelist">
 <xsl:if test="@id">
@@ -314,7 +325,8 @@
 [options="<xsl:value-of select="@spacing"/>"]
 </xsl:if>
 <xsl:for-each select="listitem">
-. <xsl:apply-templates/>
+<!-- for nesting orderedlist's; note we need an extra space -->
+<xsl:sequence select="string-join (('', for $i in (1 to count (ancestor::orderedlist)) return '.'),'')"/><xsl:text> </xsl:text><xsl:apply-templates/>
 </xsl:for-each>
 </xsl:template>
 
@@ -365,6 +377,9 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 </xsl:template>
 
 <xsl:template match="programlisting|screen">
+<xsl:if test="ancestor::listitem">
++
+</xsl:if>
 ----
 <xsl:apply-templates/>
 ----
@@ -376,6 +391,11 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
+</xsl:template>
+
+<xsl:template match="programlisting/text()|screen/text()">
+<!-- Remove all the &lt; and &gt; codes etc -->
+<xsl:value-of select="." disable-output-escaping="yes"/>
 </xsl:template>
 
 <!-- Also use passthrough for examples that have code listings with child elements (inlines) -->
@@ -394,7 +414,19 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 .<xsl:apply-templates select="title"/>
 </xsl:if>
 <xsl:if test="descendant::thead">
-[options="header"]</xsl:if>
+<xsl:variable name="colspec">
+<xsl:for-each select="tgroup/colspec/@colwidth">
+   <xsl:value-of select="substring-before(.,'*')"/>
+   <!--<xsl:if test="../tbody/row/entry[position () = $countcol][self::*/programlisting]"> -->
+   <!-- rather crude: always assume we need to perform an asciidoc on the entries -->
+   <xsl:text>a</xsl:text>
+   <xsl:if test="position() != last()">
+      <xsl:text>,</xsl:text>
+   </xsl:if>
+</xsl:for-each>
+</xsl:variable>
+[options="header"<xsl:if test="@role">, role="<xsl:value-of select="@role"/>"</xsl:if>, cols="<xsl:value-of select="$colspec"/>"]
+</xsl:if>
 |===============
 <xsl:apply-templates select="descendant::row"/>
 |===============
@@ -417,7 +449,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     <xsl:text>|</xsl:text>
     <xsl:apply-templates/>
   </xsl:for-each>
-    <xsl:if test="not (entry/para)">
+    <xsl:if test="not (entry/para) and (position () != last ())">
     <xsl:text xml:space="preserve">&#10;</xsl:text>
     </xsl:if>
 </xsl:template>
