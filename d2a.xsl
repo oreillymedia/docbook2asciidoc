@@ -192,7 +192,7 @@
 <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
-<xsl:template match="para">
+<xsl:template match="para|simpara">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
 </xsl:if>
@@ -201,13 +201,13 @@
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
-<xsl:template match="entry/para">
+<xsl:template match="entry/para|entry/simpara">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
 </xsl:if>
 <xsl:apply-templates select="node()"/>
 <xsl:choose>
-<xsl:when test="following-sibling::para">
+<xsl:when test="following-sibling::para|following-sibling::simpara">
   <!-- Two carriage returns if para has following para siblings in the same entry -->
   <xsl:text xml:space="preserve">&#10;</xsl:text>
   <xsl:text xml:space="preserve">&#10;</xsl:text>
