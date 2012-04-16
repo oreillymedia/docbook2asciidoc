@@ -18,6 +18,20 @@
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
+  
+<xsl:template match="//processing-instruction()">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy/>
+++++++++++++++++++++++++++++++++++++++
+    
+</xsl:template>
+  
+<xsl:template match="//comment()">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy/>
+++++++++++++++++++++++++++++++++++++++
+    
+</xsl:template>
 
 <xsl:template match="book/title" mode="#all">
   <xsl:variable name="title-text" select="normalize-space(.)"/>
@@ -42,9 +56,9 @@
   </xsl:if>
 </xsl:template>
 
-<xsl:template match="bookinfo" mode="#all">
+<xsl:template match="bookinfo/title" mode="#all">
   <!-- Process bookinfo/title if it exists, and there is no book/title, which gets primacy -->
-  <xsl:if test="title and not(/book/title)">
+  <xsl:if test="not(/book/title)">
     <xsl:variable name="title-text" select="title/normalize-space(.)"/>
     <xsl:value-of select="$title-text"/>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -56,9 +70,12 @@
   </xsl:if>
 </xsl:template>
 
-<xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
+<xsl:template match="bookinfo|chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
   <xsl:variable name="doc-name">
     <xsl:choose>
+      <xsl:when test="self::bookinfo">
+        <xsl:text>bookinfo</xsl:text>
+      </xsl:when>
       <xsl:when test="self::chapter">
         <xsl:text>ch</xsl:text>
 	<xsl:number count="chapter" level="any" format="01"/>
@@ -153,6 +170,14 @@
 <xsl:sequence select="replace(., '^\s+', '', 'm')"/>
 </xsl:template>
 
+<!-- Output bookinfo and its children in a passthrough -->
+<xsl:template match="bookinfo">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+    
+++++++++++++++++++++++++++++++++++++++
+</xsl:template>
+  
 <xsl:template match="chapter">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
@@ -160,8 +185,8 @@
 == <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:apply-templates select="*[not(self::title)]"/>
-</xsl:template>
+  <xsl:apply-templates select="*[not(self::title)]"/>
+</xsl:template> 
 
 <xsl:template match="appendix">
 <xsl:if test="@id">
@@ -171,17 +196,17 @@
 == <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:apply-templates select="*[not(self::title)]"/>
+  <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="preface">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
 </xsl:if>
-== <xsl:apply-templates select="title"/>
+== <xsl:value-of select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:apply-templates select="*[not(self::title)]"/>
+  <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="sect1">
@@ -191,7 +216,7 @@
 === <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:apply-templates select="*[not(self::title)]"/>
+  <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="sect2">
@@ -201,7 +226,7 @@
 ==== <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:apply-templates select="*[not(self::title)]"/>
+  <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="sect3">
@@ -211,7 +236,7 @@
 ===== <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:apply-templates select="*[not(self::title)]"/>
+  <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="para|simpara">
@@ -295,7 +320,7 @@
 
 <xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test="contains(., '+')">$$</xsl:if><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')" /><xsl:if test="contains(., '+')">$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
 
-<xsl:template match="userinput">**+<xsl:value-of select="normalize-space(.)" />+**</xsl:template>
+  <xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**</xsl:template>
 
 <xsl:template match="replaceable">_++<xsl:value-of select="normalize-space(.)" />++_</xsl:template>
 
@@ -340,15 +365,6 @@
 </xsl:for-each>
 </xsl:template>
 
-<xsl:template match="calloutlist">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
-<xsl:for-each select="callout">
-&lt;<xsl:value-of select="position()"/>&gt; <xsl:apply-templates/>
-</xsl:for-each>
-</xsl:template>
-
 <xsl:template match="simplelist">
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:if test="@id">
@@ -386,25 +402,52 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 ====<xsl:apply-templates select="programlisting|screen"/>====
 </xsl:template>
 
+<!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
 <xsl:template match="programlisting|screen">
 ----
 <xsl:apply-templates/>
 ----
 <xsl:text xml:space="preserve">&#10;</xsl:text>
+    
+<xsl:if test="following-sibling::*[1][self::calloutlist]">
+    <xsl:call-template name="calloutlist_ad"/>
+</xsl:if>
+</xsl:template>
+  
+<!-- This template is called for an asciidoc-formatted calloutlist (not docbook passthrough) -->
+<xsl:template name="calloutlist_ad">
+  <xsl:if test="@id">
+    [[<xsl:value-of select="@id"/>]]
+  </xsl:if>
+  <xsl:for-each select="callout">
+    &lt;<xsl:value-of select="position()"/>&gt; <xsl:apply-templates/>
+  </xsl:for-each>
+  <xsl:if test="calloutlist">
+    <xsl:copy-of select="."/>
+  </xsl:if>
 </xsl:template>
 
 <!-- Passthrough for code listings that have child elements (inlines) -->
 <xsl:template match="programlisting[*]|screen[*]">
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
+
+  <!-- Passthrough for related calloutlist -->
+<xsl:if test="following-sibling::*[1][self::calloutlist]">
+  <xsl:copy-of select="following-sibling::*[1][self::calloutlist]"/>
+</xsl:if>
 ++++++++++++++++++++++++++++++++++++++
 </xsl:template>
+  
+<!-- Repress callout text from appearing as duplicate text outside of the programlisting passthrough -->
+<xsl:template match="calloutlist/callout"/>
 
 <!-- Also use passthrough for examples that have code listings with child elements (inlines) -->
 <xsl:template match="example[descendant::programlisting[*]]|example[descendant::screen[*]]">
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
+
 </xsl:template>
 
 <xsl:template match="co"><xsl:variable name="curr" select="@id"/>&lt;<xsl:value-of select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>&gt;</xsl:template>
