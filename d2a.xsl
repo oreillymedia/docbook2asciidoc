@@ -19,13 +19,6 @@
   </xsl:choose>
 </xsl:template>
   
-<xsl:template match="//processing-instruction()">
-++++++++++++++++++++++++++++++++++++++
-<xsl:copy/>
-++++++++++++++++++++++++++++++++++++++
-    
-</xsl:template>
-  
 <xsl:template match="//comment()">
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy/>
