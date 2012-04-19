@@ -9,6 +9,9 @@
 <xsl:strip-space elements="table row entry tgroup thead"/>
 
 <xsl:template match="/">
+  <xsl:if test="not(/book/title)">
+    <xsl:apply-templates select="//bookinfo/title"/>
+  </xsl:if>
   <xsl:choose>
     <xsl:when test="$chunk-output != 'false'">
       <xsl:apply-templates select="*" mode="chunk"/>
@@ -49,10 +52,10 @@
   </xsl:if>
 </xsl:template>
 
-<xsl:template match="bookinfo/title" mode="#all">
+<xsl:template match="bookinfo/title">
   <!-- Process bookinfo/title if it exists, and there is no book/title, which gets primacy -->
   <xsl:if test="not(/book/title)">
-    <xsl:variable name="title-text" select="title/normalize-space(.)"/>
+    <xsl:variable name="title-text" select="normalize-space(.)"/>
     <xsl:value-of select="$title-text"/>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
     <xsl:call-template name="title-markup">
@@ -67,7 +70,7 @@
   <xsl:variable name="doc-name">
     <xsl:choose>
       <xsl:when test="self::bookinfo">
-        <xsl:text>bookinfo</xsl:text>
+        <xsl:text>book-docinfo.xml</xsl:text>
       </xsl:when>
       <xsl:when test="self::chapter">
         <xsl:text>ch</xsl:text>
@@ -106,13 +109,18 @@
         </xsl:if>
       </xsl:when>
     </xsl:choose>
-    <xsl:text>.asciidoc</xsl:text>
+    <xsl:if test="not(self::bookinfo)">
+      <xsl:text>.asciidoc</xsl:text>
+    </xsl:if>
   </xsl:variable>
+  <xsl:if test="not(self::bookinfo)">
+    <!-- No include:: for bookinfo -->
     <xsl:text xml:space="preserve">&#10;</xsl:text>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
     <xsl:text>include::</xsl:text>
     <xsl:value-of select="$doc-name"/>
     <xsl:text>[]</xsl:text>
+  </xsl:if>
   <xsl:result-document href="{$doc-name}">
     <xsl:apply-templates select="." mode="#default"/>
   </xsl:result-document>
@@ -163,12 +171,13 @@
 <xsl:sequence select="replace(., '^\s+', '', 'm')"/>
 </xsl:template>
 
-<!-- Output bookinfo and its children in a passthrough -->
+<!-- Output bookinfo children into book-docinfo.xml -->
 <xsl:template match="bookinfo">
-++++++++++++++++++++++++++++++++++++++
-<xsl:copy-of select="."/>
-    
-++++++++++++++++++++++++++++++++++++++
+  <xsl:apply-templates mode="bookinfo-children"/>
+</xsl:template>
+
+<xsl:template match="bookinfo/*" mode="bookinfo-children">
+  <xsl:copy-of select="."/>
 </xsl:template>
   
 <xsl:template match="chapter">
