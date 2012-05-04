@@ -250,6 +250,19 @@
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
+<xsl:template match="formalpara">
+<xsl:if test="@id">
+[[<xsl:value-of select="@id"/>]]
+</xsl:if>
+<!-- Put formalpara <title> in bold (drop any inline formatting) -->
+<xsl:text>*</xsl:text>
+<xsl:value-of select="title"/>
+<xsl:text>* </xsl:text>
+<xsl:apply-templates select="node()[not(self::title)]"/>
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+</xsl:template>
+
 <xsl:template match="entry/para|entry/simpara">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
