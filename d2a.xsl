@@ -5,6 +5,8 @@
 
 <xsl:output method="xml" omit-xml-declaration="yes"/>
 <xsl:param name="chunk-output">false</xsl:param>
+<xsl:param name="bookinfo-doc-name">book-docinfo.xml</xsl:param>
+
 <xsl:preserve-space elements="*"/>
 <xsl:strip-space elements="table row entry tgroup thead"/>
 
@@ -66,12 +68,9 @@
   </xsl:if>
 </xsl:template>
 
-<xsl:template match="bookinfo|chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
+<xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
   <xsl:variable name="doc-name">
     <xsl:choose>
-      <xsl:when test="self::bookinfo">
-        <xsl:text>book-docinfo.xml</xsl:text>
-      </xsl:when>
       <xsl:when test="self::chapter">
         <xsl:text>ch</xsl:text>
 	<xsl:number count="chapter" level="any" format="01"/>
@@ -109,18 +108,13 @@
         </xsl:if>
       </xsl:when>
     </xsl:choose>
-    <xsl:if test="not(self::bookinfo)">
-      <xsl:text>.asciidoc</xsl:text>
-    </xsl:if>
+    <xsl:text>.asciidoc</xsl:text>
   </xsl:variable>
-  <xsl:if test="not(self::bookinfo)">
-    <!-- No include:: for bookinfo -->
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
-    <xsl:text>include::</xsl:text>
-    <xsl:value-of select="$doc-name"/>
-    <xsl:text>[]</xsl:text>
-  </xsl:if>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:text>include::</xsl:text>
+  <xsl:value-of select="$doc-name"/>
+  <xsl:text>[]</xsl:text>
   <xsl:result-document href="{$doc-name}">
     <xsl:apply-templates select="." mode="#default"/>
   </xsl:result-document>
@@ -172,8 +166,10 @@
 </xsl:template>
 
 <!-- Output bookinfo children into book-docinfo.xml -->
-<xsl:template match="bookinfo">
+<xsl:template match="bookinfo" mode="#all">
+<xsl:result-document href="{$bookinfo-doc-name}">
   <xsl:apply-templates mode="bookinfo-children"/>
+</xsl:result-document>
 </xsl:template>
 
 <xsl:template match="bookinfo/*" mode="bookinfo-children">
