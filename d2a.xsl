@@ -205,6 +205,7 @@
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
 </xsl:if>
+[preface]
 == <xsl:value-of select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
