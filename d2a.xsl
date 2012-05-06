@@ -288,33 +288,12 @@
 <xsl:apply-templates select="node()"/>
 </xsl:template>
 
-<xsl:template match="tip">
+<xsl:template match="tip|warning|note|caution|important">
 <xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
-[TIP]
+[<xsl:value-of select="upper-case(name())"/>]
+<xsl:if test="title">.<xsl:apply-templates select="title"/></xsl:if>
 ====
-<xsl:apply-templates select="node()"/>
-====
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-</xsl:template>
-
-<xsl:template match="note">
-<xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
-[NOTE]
-====
-<xsl:apply-templates select="node()"/>
-====
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-</xsl:template>
-
-<xsl:template match="warning">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
-[WARNING]
-====
-<xsl:apply-templates select="node()"/>
+<xsl:apply-templates select="node()[not(self::title)]"/>
 ====
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
