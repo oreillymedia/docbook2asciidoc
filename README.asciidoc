@@ -19,6 +19,14 @@ If you'd like the AsciiDoc output to be "chunked" into separate files for each p
 java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl chunk-output=true
 ----
 
+Content within <bookinfo> of the DocBook source will be output as XML to the filename specified in the parameter "bookinfo-doc-name". For example:
+
+----
+java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl chunk-output=true bookinfo-doc-name="mybookinfo.xml"
+----
+
+Default value of "bookinfo-doc-name" is "book-docinfo.xml"
+
 == Example
 
 This example shows how to run this script for a subversion repository
