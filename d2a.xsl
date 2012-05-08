@@ -260,6 +260,36 @@
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
+<!-- Same handling for blockquote and epigraph; convert to AsciiDoc quote block -->
+<xsl:template match="blockquote|epigraph">
+<xsl:if test="@id">
+[[<xsl:value-of select="@id"/>]]
+</xsl:if>
+<xsl:if test="title">.<xsl:apply-templates select="title"/></xsl:if>
+<xsl:text>[quote</xsl:text>
+<xsl:if test="attribution">
+  <xsl:text>, </xsl:text>
+  <!-- Simple processing of attribution elements, placing a space between each
+       and skipping <citetitle>, which is handled separately below -->
+  <xsl:for-each select="attribution/text()|attribution//*[not(*)][not(self::citetitle)]">
+    <!--Output text as is, except escape commas as &#44; entities for 
+	proper AsciiDoc attribute processing -->
+    <xsl:value-of select="normalize-space(replace(., ',', '&amp;#44;'))" disable-output-escaping="yes"/>
+    <xsl:text> </xsl:text>
+  </xsl:for-each>
+</xsl:if>
+<xsl:if test="attribution/citetitle">
+  <xsl:text>, </xsl:text>
+  <xsl:value-of select="attribution/citetitle"/>
+</xsl:if>
+<xsl:text>]</xsl:text>
+____
+<xsl:apply-templates select="node()[not(self::title or self::attribution)]"/>
+____
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+</xsl:template>
+
 <xsl:template match="entry/para|entry/simpara">
 <xsl:if test="@id">
 [[<xsl:value-of select="@id"/>]]
