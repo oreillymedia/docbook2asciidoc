@@ -68,6 +68,48 @@
   </xsl:if>
 </xsl:template>
 
+<xsl:template match="part" mode="chunk">
+  <!-- Only bother chunking parts into a separate file if there's actually partintro content -->
+  <xsl:variable name="part_content">
+    <!-- Title and partintro (if present) -->
+    <xsl:if test="@id">
+      <xsl:text>[[</xsl:text>
+      <xsl:value-of select="@id"/>
+      <xsl:text>]]</xsl:text>
+    </xsl:if>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:text xml:space="preserve">=</xsl:text>
+    <xsl:apply-templates select="title"/>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:apply-templates select="partintro" mode="#default"/>
+  </xsl:variable>
+  <xsl:choose>
+    <xsl:when test="partintro">
+      <xsl:variable name="doc-name">
+	<xsl:text>part</xsl:text>
+	<xsl:number count="part" level="any" format="i"/>
+	<xsl:text>.asciidoc</xsl:text>
+      </xsl:variable>
+      <xsl:text xml:space="preserve">&#10;</xsl:text>
+      <xsl:text xml:space="preserve">&#10;</xsl:text>
+      <xsl:text>include::</xsl:text>
+      <xsl:value-of select="$doc-name"/>
+      <xsl:text>[]</xsl:text>
+      <xsl:result-document href="{$doc-name}">
+	<xsl:value-of select="$part_content"/>
+      </xsl:result-document>
+      <xsl:apply-templates select="*[not(self::title)][not(self::partintro)]" mode="chunk"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text xml:space="preserve">&#10;</xsl:text>
+      <xsl:text xml:space="preserve">&#10;</xsl:text>
+      <xsl:value-of select="$part_content"/>
+      <xsl:apply-templates select="*[not(self::title)][not(self::partintro)]" mode="chunk"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
 <xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
   <xsl:variable name="doc-name">
     <xsl:choose>
@@ -174,6 +216,29 @@
 
 <xsl:template match="bookinfo/*" mode="bookinfo-children">
   <xsl:copy-of select="."/>
+</xsl:template>
+
+<xsl:template match="part">
+<xsl:if test="@id">
+[[<xsl:value-of select="@id"/>]]
+</xsl:if>
+= <xsl:apply-templates select="title"/>
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:apply-templates select="*[not(self::title)]"/>
+</xsl:template>
+
+<xsl:template match="partintro">
+<xsl:if test="@id">
+[[<xsl:value-of select="@id"/>]]
+</xsl:if>
+[partintro]
+<xsl:if test="title">
+.<xsl:value-of select="title"/>
+</xsl:if>
+--
+<xsl:apply-templates select="*[not(self::title)]"/>
+--
 </xsl:template>
   
 <xsl:template match="chapter">
