@@ -78,7 +78,7 @@
       <xsl:text>]]</xsl:text>
     </xsl:if>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
-    <xsl:text xml:space="preserve">=</xsl:text>
+    <xsl:text xml:space="preserve">= </xsl:text>
     <xsl:apply-templates select="title"/>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
