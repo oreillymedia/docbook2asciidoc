@@ -39,6 +39,12 @@
     
 </xsl:template>
 
+<xsl:template match="processing-instruction()">
+<xsl:text>+++</xsl:text>
+<xsl:copy-of select="."/>
+<xsl:text>+++</xsl:text>
+</xsl:template>
+
 <xsl:template match="book/title" mode="#all">
   <xsl:variable name="title-text" select="normalize-space(.)"/>
   <xsl:value-of select="$title-text"/>
