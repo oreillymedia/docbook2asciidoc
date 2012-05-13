@@ -3,7 +3,15 @@
  xmlns:xs="http://www.w3.org/2001/XMLSchema"
  >
 
-<xsl:output method="xml" omit-xml-declaration="yes"/>
+
+<!-- Mapping to allow use of XML reserved chars in AsciiDoc markup elements, e.g., angle brackets for cross-references --> 
+<xsl:character-map name="xml-reserved-chars">
+  <xsl:output-character character="&#xE801;" string="&lt;"/>
+  <xsl:output-character character="&#xE802;" string="&gt;"/>
+  <xsl:output-character character="&#xE803;" string="&amp;"/>
+</xsl:character-map>
+
+<xsl:output method="xml" omit-xml-declaration="yes" use-character-maps="xml-reserved-chars"/>
 <xsl:param name="chunk-output">false</xsl:param>
 <xsl:param name="bookinfo-doc-name">book-docinfo.xml</xsl:param>
 
@@ -339,7 +347,7 @@
   <xsl:for-each select="attribution/text()|attribution//*[not(*)][not(self::citetitle)]">
     <!--Output text as is, except escape commas as &#44; entities for 
 	proper AsciiDoc attribute processing -->
-    <xsl:value-of select="normalize-space(replace(., ',', '&amp;#44;'))" disable-output-escaping="yes"/>
+    <xsl:value-of select="normalize-space(replace(., ',', '&#xE803;#44;'))"/>
     <xsl:text> </xsl:text>
   </xsl:for-each>
 </xsl:if>
@@ -414,9 +422,9 @@ ____
 
 <xsl:template match="email"><xsl:value-of select="normalize-space(.)" /></xsl:template>
 
-<xsl:template match="xref"><xsl:value-of select="'&lt;&lt;'" disable-output-escaping="yes"/><xsl:value-of select="@linkend" /><xsl:value-of select="'&gt;&gt;'" disable-output-escaping="yes"/></xsl:template>
+<xsl:template match="xref">&#xE801;&#xE801;<xsl:value-of select="@linkend" />&#xE802;&#xE802;</xsl:template>
 
-<xsl:template match="link"><xsl:value-of select="'&lt;&lt;'" disable-output-escaping="yes"/><xsl:value-of select="@linkend" />,<xsl:value-of select="."/><xsl:value-of select="'&gt;&gt;'" disable-output-escaping="yes"/></xsl:template>
+<xsl:template match="link">&#xE801;&#xE801;<xsl:value-of select="@linkend" />,<xsl:value-of select="."/>&#xE802;&#xE802;</xsl:template>
 
 <xsl:template match="variablelist">
 <xsl:if test="@id">
@@ -506,7 +514,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     [[<xsl:value-of select="@id"/>]]
   </xsl:if>
   <xsl:for-each select="callout">
-    &lt;<xsl:value-of select="position()"/>&gt; <xsl:apply-templates/>
+    &#xE801;<xsl:value-of select="position()"/>&#xE802; <xsl:apply-templates/>
   </xsl:for-each>
   <xsl:if test="calloutlist">
     <xsl:copy-of select="."/>
@@ -536,7 +544,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 </xsl:template>
 
-<xsl:template match="co"><xsl:variable name="curr" select="@id"/>&lt;<xsl:value-of select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>&gt;</xsl:template>
+<xsl:template match="co"><xsl:variable name="curr" select="@id"/>&#xE801;<xsl:value-of select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>&#xE802;</xsl:template>
 
 <xsl:template match="table|informaltable">
 <xsl:if test="@id">
