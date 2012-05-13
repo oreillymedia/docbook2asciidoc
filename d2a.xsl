@@ -86,12 +86,7 @@
   <!-- Only bother chunking parts into a separate file if there's actually partintro content -->
   <xsl:variable name="part_content">
     <!-- Title and partintro (if present) -->
-    <xsl:if test="@id">
-      <xsl:text>[[</xsl:text>
-      <xsl:value-of select="@id"/>
-      <xsl:text>]]</xsl:text>
-    </xsl:if>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:call-template name="process-id"/>
     <xsl:text xml:space="preserve">= </xsl:text>
     <xsl:apply-templates select="title"/>
     <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -233,9 +228,7 @@
 </xsl:template>
 
 <xsl:template match="part">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 = <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -243,9 +236,7 @@
 </xsl:template>
 
 <xsl:template match="partintro">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 [partintro]
 <xsl:if test="title">
 .<xsl:value-of select="title"/>
@@ -256,9 +247,7 @@
 </xsl:template>
   
 <xsl:template match="chapter">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 == <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -266,9 +255,7 @@
 </xsl:template> 
 
 <xsl:template match="appendix">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 [appendix]
 == <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -277,9 +264,7 @@
 </xsl:template>
 
 <xsl:template match="preface">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 [preface]
 == <xsl:value-of select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -288,9 +273,7 @@
 </xsl:template>
 
 <xsl:template match="sect1">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 === <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -298,9 +281,7 @@
 </xsl:template>
 
 <xsl:template match="sect2">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 ==== <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -308,9 +289,7 @@
 </xsl:template>
 
 <xsl:template match="sect3">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 ===== <xsl:apply-templates select="title"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -318,18 +297,14 @@
 </xsl:template>
 
 <xsl:template match="para|simpara">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 <xsl:apply-templates select="node()"/>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
 
 <xsl:template match="formalpara">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 <!-- Put formalpara <title> in bold (drop any inline formatting) -->
 <xsl:text>*</xsl:text>
 <xsl:value-of select="title"/>
@@ -341,9 +316,7 @@
 
 <!-- Same handling for blockquote and epigraph; convert to AsciiDoc quote block -->
 <xsl:template match="blockquote|epigraph">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 <xsl:if test="title">.<xsl:apply-templates select="title"/></xsl:if>
 <xsl:text>[quote</xsl:text>
 <xsl:if test="attribution">
@@ -370,9 +343,7 @@ ____
 </xsl:template>
 
 <xsl:template match="entry/para|entry/simpara">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 <xsl:apply-templates select="node()"/>
 <xsl:choose>
 <xsl:when test="following-sibling::para|following-sibling::simpara">
@@ -394,7 +365,7 @@ ____
 </xsl:template>
 
 <xsl:template match="tip|warning|note|caution|important">
-<xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
+<xsl:call-template name="process-id"/>
 [<xsl:value-of select="upper-case(name())"/>]
 <xsl:if test="title">.<xsl:apply-templates select="title"/></xsl:if>
 ====
@@ -433,18 +404,14 @@ ____
 <xsl:template match="link">&#xE801;&#xE801;<xsl:value-of select="@linkend" />,<xsl:value-of select="."/>&#xE802;&#xE802;</xsl:template>
 
 <xsl:template match="variablelist">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 <xsl:for-each select="varlistentry">
 <xsl:apply-templates select="term,listitem"/>
 </xsl:for-each>
 </xsl:template>
 
 <xsl:template match="itemizedlist">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 <xsl:if test="@spacing">
 [options="<xsl:value-of select="@spacing"/>"]
 </xsl:if>
@@ -454,9 +421,7 @@ ____
 </xsl:template>
 
 <xsl:template match="orderedlist">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 <xsl:if test="@spacing">
 [options="<xsl:value-of select="@spacing"/>"]
 </xsl:if>
@@ -467,9 +432,7 @@ ____
 
 <xsl:template match="simplelist">
 <xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-</xsl:if>
+<xsl:call-template name="process-id"/>
 <xsl:for-each select="member">
 <xsl:apply-templates/><xsl:if test="position() &lt; last()"> +
 </xsl:if>
@@ -479,7 +442,7 @@ ____
 </xsl:template>
 
 <xsl:template match="figure">
-<xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
+<xsl:call-template name="process-id"/>
 .<xsl:apply-templates select="title"/>
 image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fileref"/>[]
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -487,7 +450,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 <xsl:template match="informalfigure">
 <xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
+<xsl:call-template name="process-id"/>
 image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fileref"/>[]
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 </xsl:template>
@@ -495,7 +458,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:template match="inlinemediaobject">image:<xsl:value-of select="imageobject[@role='web']/imagedata/@fileref"/>[]</xsl:template>
 
 <xsl:template match="example">
-<xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
+<xsl:call-template name="process-id"/>
 <xsl:if test="title">
 .<xsl:apply-templates select="title"/>
 </xsl:if>
@@ -516,9 +479,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   
 <!-- This template is called for an asciidoc-formatted calloutlist (not docbook passthrough) -->
 <xsl:template name="calloutlist_ad">
-  <xsl:if test="@id">
-    [[<xsl:value-of select="@id"/>]]
-  </xsl:if>
+  <xsl:call-template name="process-id"/>
   <xsl:for-each select="callout">
     &#xE801;<xsl:value-of select="position()"/>&#xE802; <xsl:apply-templates/>
   </xsl:for-each>
@@ -553,8 +514,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:template match="co"><xsl:variable name="curr" select="@id"/>&#xE801;<xsl:value-of select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>&#xE802;</xsl:template>
 
 <xsl:template match="table|informaltable">
-<xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]</xsl:if>
+<xsl:call-template name="process-id"/>
 <xsl:if test="title">
 .<xsl:apply-templates select="title"/>
 </xsl:if>
@@ -568,10 +528,10 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 </xsl:template>
 
 <xsl:template match="sidebar">
-<xsl:if test="@id">[[<xsl:value-of select="@id"/>]]</xsl:if>
+<xsl:call-template name="process-id"/>
 .<xsl:apply-templates select="title"/>
 ****
-<xsl:apply-templates select="*[not(title)]"/>
+<xsl:apply-templates select="*[not(self::title)]"/>
 ****
 <xsl:text xml:space="preserve">&#10;</xsl:text>
 <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -595,9 +555,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 </xsl:template>
 
 <xsl:template match="section">
-  <xsl:if test="@id">
-[[<xsl:value-of select="@id"/>]]
-  </xsl:if>
+  <xsl:call-template name="process-id"/>
   <xsl:sequence select="string-join (('&#10;&#10;', for $i in (1 to count (ancestor::section) + 3) return '='),'')"/>
   <xsl:apply-templates select="title"/>
   <xsl:text xml:space="preserve">&#10;</xsl:text>
@@ -624,6 +582,14 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
       <xsl:value-of select="replace(., '\s+$', '', 'm')"/>
     </xsl:when>
   </xsl:choose>
+</xsl:template>
+
+<xsl:template name="process-id">
+  <xsl:if test="@id">
+    <xsl:text xml:space="preserve">[[</xsl:text>
+    <xsl:value-of select="@id"/>
+    <xsl:text xml:space="preserve">]]&#10;</xsl:text>
+  </xsl:if>
 </xsl:template>
 
 </xsl:stylesheet>
