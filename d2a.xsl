@@ -172,17 +172,17 @@
 <xsl:template match="indexterm" />
 
 <xsl:template match="para/text()">
-<xsl:sequence select="replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm')"/>
+<xsl:value-of select="replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm')"/>
 </xsl:template>
 
-<xsl:template match="phrase/text()"><xsl:text/><xsl:sequence select="replace(., '\n\s+', ' ', 'm')"/><xsl:text/></xsl:template>
+<xsl:template match="phrase/text()"><xsl:text/><xsl:value-of select="replace(., '\n\s+', ' ', 'm')"/><xsl:text/></xsl:template>
 
 <xsl:template match="ulink/text()">
-<xsl:sequence select="replace(., '\n\s+', ' ', 'm')"/>
+<xsl:value-of select="replace(., '\n\s+', ' ', 'm')"/>
 </xsl:template>
 
 <xsl:template match="title/text()">
-<xsl:sequence select="replace(., '\n\s+', ' ', 'm')"/>
+<xsl:value-of select="replace(., '\n\s+', ' ', 'm')"/>
 </xsl:template>
 
 <!-- Strip leading whitespace from first text node in <term>, if it does not have preceding element siblings --> 
@@ -212,7 +212,7 @@
 </xsl:template>
 
 <xsl:template match="member/text()">
-<xsl:sequence select="replace(., '^\s+', '', 'm')"/>
+<xsl:value-of select="replace(., '^\s+', '', 'm')"/>
 </xsl:template>
 
 <!-- Output bookinfo children into book-docinfo.xml -->
