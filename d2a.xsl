@@ -467,13 +467,30 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 <!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
 <xsl:template match="programlisting|screen">
-----
-<xsl:apply-templates/>
-----
 <xsl:text xml:space="preserve">&#10;</xsl:text>
-    
+<xsl:choose>
+  <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
+  <xsl:when test="matches(., '----')">
+    <xsl:text>[listing]</xsl:text>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:text>....</xsl:text>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:text>....</xsl:text>
+    <xsl:text xml:space="preserve">&#10;&#10;</xsl:text>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:text>----</xsl:text>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:text>----</xsl:text>
+    <xsl:text xml:space="preserve">&#10;&#10;</xsl:text>
+  </xsl:otherwise>
+</xsl:choose>
 <xsl:if test="following-sibling::*[1][self::calloutlist]">
-    <xsl:call-template name="calloutlist_ad"/>
+  <xsl:call-template name="calloutlist_ad"/>
 </xsl:if>
 </xsl:template>
   
