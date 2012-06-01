@@ -233,9 +233,7 @@
 <xsl:template match="partintro">
 <xsl:call-template name="process-id"/>
 [partintro]
-<xsl:if test="title">
-.<xsl:value-of select="title"/>
-</xsl:if>
+<xsl:apply-templates select="." mode="title"/>
 --
 <xsl:apply-templates select="*[not(self::title)]"/>
 --
@@ -304,7 +302,7 @@
 <!-- Same handling for blockquote and epigraph; convert to AsciiDoc quote block -->
 <xsl:template match="blockquote|epigraph">
 <xsl:call-template name="process-id"/>
-<xsl:if test="title">.<xsl:apply-templates select="title"/></xsl:if>
+<xsl:apply-templates select="." mode="title"/>
 <xsl:text>[quote</xsl:text>
 <xsl:if test="attribution">
   <xsl:text>, </xsl:text>
@@ -343,7 +341,6 @@ ____
 </xsl:choose>
 </xsl:template>
 
-
 <xsl:template match="footnote/para">
 <!--Special handling for footnote paras to contract whitespace-->
 <xsl:apply-templates select="node()"/>
@@ -352,8 +349,7 @@ ____
 <xsl:template match="tip|warning|note|caution|important">
 <xsl:call-template name="process-id"/>
 [<xsl:value-of select="upper-case(name())"/>]
-<xsl:if test="title">.<xsl:apply-templates select="title"/></xsl:if>
-====
+<xsl:apply-templates select="." mode="title"/>====
 <xsl:apply-templates select="node()[not(self::title)]"/>
 ====
 <xsl:value-of select="util:carriage-returns(2)"/>
@@ -442,9 +438,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 <xsl:template match="example">
 <xsl:call-template name="process-id"/>
-<xsl:if test="title">
-.<xsl:apply-templates select="title"/>
-</xsl:if>
+<xsl:apply-templates select="." mode="title"/>
 ====<xsl:apply-templates select="programlisting|screen"/>====
 </xsl:template>
 
@@ -515,11 +509,10 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 <xsl:template match="table|informaltable">
 <xsl:call-template name="process-id"/>
-<xsl:if test="title">
-.<xsl:apply-templates select="title"/>
-</xsl:if>
+<xsl:apply-templates select="." mode="title"/>
 <xsl:if test="descendant::thead">
-[options="header"]</xsl:if>
+<xsl:text>[options="header"]</xsl:text>
+</xsl:if>
 |===============
 <xsl:apply-templates select="descendant::row"/>
 |===============
@@ -590,6 +583,14 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     <xsl:text xml:space="preserve">[[</xsl:text>
     <xsl:value-of select="@id"/>
     <xsl:text xml:space="preserve">]]&#10;</xsl:text>
+  </xsl:if>
+</xsl:template>
+
+<xsl:template match="*" mode="title">
+  <xsl:if test="title">
+    <xsl:text>.</xsl:text>
+    <xsl:apply-templates select="title"/>
+    <xsl:value-of select="util:carriage-returns(1)"/>
   </xsl:if>
 </xsl:template>
 
