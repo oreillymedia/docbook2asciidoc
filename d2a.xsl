@@ -20,16 +20,21 @@
 <xsl:preserve-space elements="*"/>
 <xsl:strip-space elements="table row entry tgroup thead"/>
 
-<xsl:template match="/">
-  <xsl:if test="not(/book/title)">
-    <xsl:apply-templates select="//bookinfo/title"/>
-  </xsl:if>
+<xsl:template match="/book">
+  <xsl:choose>
+    <xsl:when test="title">
+      <xsl:apply-templates select="title"/>
+    </xsl:when>
+    <xsl:when test="bookinfo/title">
+      <xsl:apply-templates select="bookinfo/title"/>
+    </xsl:when>
+  </xsl:choose>
   <xsl:choose>
     <xsl:when test="$chunk-output != 'false'">
-      <xsl:apply-templates select="*" mode="chunk"/>
+      <xsl:apply-templates select="*[not(self::title)]" mode="chunk"/>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:apply-templates/>
+      <xsl:apply-templates select="*[not(self::title)]"/>
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
@@ -47,39 +52,10 @@
 <xsl:text>+++</xsl:text>
 </xsl:template>
 
-<xsl:template match="book/title" mode="#all">
-  <xsl:variable name="title-text" select="normalize-space(.)"/>
-  <xsl:value-of select="$title-text"/>
-  <xsl:value-of select="util:carriage-returns(1)"/>
-  <xsl:call-template name="title-markup">
-    <xsl:with-param name="title-length" select="string-length($title-text)"/>
-  </xsl:call-template>
+<xsl:template match="book/title|bookinfo/title">
+  <xsl:text>= </xsl:text>
+  <xsl:value-of select="."/>
   <xsl:value-of select="util:carriage-returns(2)"/>
-</xsl:template>
-
-<xsl:template name="title-markup">
-  <!-- Recursive loop to generate = markup under title -->
-  <xsl:param name="title-length"/>
-  <xsl:text>=</xsl:text>
-  <xsl:variable name="length-minus-one" select="$title-length - 1"/>
-  <xsl:if test="$length-minus-one &gt; 0">
-    <xsl:call-template name="title-markup">
-      <xsl:with-param name="title-length" select="$length-minus-one"/>
-    </xsl:call-template>
-  </xsl:if>
-</xsl:template>
-
-<xsl:template match="bookinfo/title">
-  <!-- Process bookinfo/title if it exists, and there is no book/title, which gets primacy -->
-  <xsl:if test="not(/book/title)">
-    <xsl:variable name="title-text" select="normalize-space(.)"/>
-    <xsl:value-of select="$title-text"/>
-    <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:call-template name="title-markup">
-      <xsl:with-param name="title-length" select="string-length($title-text)"/>
-    </xsl:call-template>
-    <xsl:value-of select="util:carriage-returns(2)"/>
-  </xsl:if>
 </xsl:template>
 
 <xsl:template match="part" mode="chunk">
