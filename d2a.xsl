@@ -1,6 +1,8 @@
 <xsl:stylesheet version="2.0"
  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+ xmlns:util="http://github.com/oreillymedia/docbook2asciidoc/"
+ exclude-result-prefixes="util"
  >
 
 
@@ -48,12 +50,11 @@
 <xsl:template match="book/title" mode="#all">
   <xsl:variable name="title-text" select="normalize-space(.)"/>
   <xsl:value-of select="$title-text"/>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:value-of select="util:carriage-returns(1)"/>
   <xsl:call-template name="title-markup">
     <xsl:with-param name="title-length" select="string-length($title-text)"/>
   </xsl:call-template>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
 <xsl:template name="title-markup">
@@ -73,12 +74,11 @@
   <xsl:if test="not(/book/title)">
     <xsl:variable name="title-text" select="normalize-space(.)"/>
     <xsl:value-of select="$title-text"/>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:call-template name="title-markup">
       <xsl:with-param name="title-length" select="string-length($title-text)"/>
     </xsl:call-template>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(2)"/>
   </xsl:if>
 </xsl:template>
 
@@ -89,8 +89,7 @@
     <xsl:call-template name="process-id"/>
     <xsl:text xml:space="preserve">= </xsl:text>
     <xsl:apply-templates select="title"/>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(2)"/>
     <xsl:apply-templates select="partintro" mode="#default"/>
   </xsl:variable>
   <xsl:choose>
@@ -100,8 +99,7 @@
 	<xsl:number count="part" level="any" format="i"/>
 	<xsl:text>.asciidoc</xsl:text>
       </xsl:variable>
-      <xsl:text xml:space="preserve">&#10;</xsl:text>
-      <xsl:text xml:space="preserve">&#10;</xsl:text>
+      <xsl:value-of select="util:carriage-returns(2)"/>
       <xsl:text>include::</xsl:text>
       <xsl:value-of select="$doc-name"/>
       <xsl:text>[]</xsl:text>
@@ -111,8 +109,7 @@
       <xsl:apply-templates select="*[not(self::title)][not(self::partintro)]" mode="chunk"/>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:text xml:space="preserve">&#10;</xsl:text>
-      <xsl:text xml:space="preserve">&#10;</xsl:text>
+      <xsl:value-of select="util:carriage-returns(2)"/>
       <xsl:value-of select="$part_content"/>
       <xsl:apply-templates select="*[not(self::title)][not(self::partintro)]" mode="chunk"/>
     </xsl:otherwise>
@@ -161,8 +158,7 @@
     </xsl:choose>
     <xsl:text>.asciidoc</xsl:text>
   </xsl:variable>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:text>include::</xsl:text>
   <xsl:value-of select="$doc-name"/>
   <xsl:text>[]</xsl:text>
@@ -230,8 +226,7 @@
 <xsl:template match="part">
 <xsl:call-template name="process-id"/>
 = <xsl:apply-templates select="title"/>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
@@ -249,8 +244,7 @@
 <xsl:template match="chapter">
 <xsl:call-template name="process-id"/>
 == <xsl:apply-templates select="title"/>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template> 
 
@@ -258,8 +252,7 @@
 <xsl:call-template name="process-id"/>
 [appendix]
 == <xsl:apply-templates select="title"/>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
@@ -267,40 +260,35 @@
 <xsl:call-template name="process-id"/>
 [preface]
 == <xsl:value-of select="title"/>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="sect1">
 <xsl:call-template name="process-id"/>
 === <xsl:apply-templates select="title"/>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="sect2">
 <xsl:call-template name="process-id"/>
 ==== <xsl:apply-templates select="title"/>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="sect3">
 <xsl:call-template name="process-id"/>
 ===== <xsl:apply-templates select="title"/>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="para|simpara">
 <xsl:call-template name="process-id"/>
 <xsl:apply-templates select="node()"/>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
 <xsl:template match="formalpara">
@@ -310,8 +298,7 @@
 <xsl:value-of select="title"/>
 <xsl:text>* </xsl:text>
 <xsl:apply-templates select="node()[not(self::title)]"/>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
 <!-- Same handling for blockquote and epigraph; convert to AsciiDoc quote block -->
@@ -338,8 +325,7 @@
 ____
 <xsl:apply-templates select="node()[not(self::title or self::attribution)]"/>
 ____
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
 <xsl:template match="entry/para|entry/simpara">
@@ -348,12 +334,11 @@ ____
 <xsl:choose>
 <xsl:when test="following-sibling::para|following-sibling::simpara">
   <!-- Two carriage returns if para has following para siblings in the same entry -->
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:when>
 <xsl:when test="parent::entry[not(following-sibling::entry)]">
   <!-- One carriage return if last para in last entry in row -->
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:value-of select="util:carriage-returns(1)"/>
 </xsl:when>
 </xsl:choose>
 </xsl:template>
@@ -371,8 +356,7 @@ ____
 ====
 <xsl:apply-templates select="node()[not(self::title)]"/>
 ====
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
 <xsl:template match="term"><xsl:apply-templates select="node()"/>:: </xsl:template>
@@ -431,28 +415,27 @@ ____
 </xsl:template>
 
 <xsl:template match="simplelist">
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(1)"/>
 <xsl:call-template name="process-id"/>
 <xsl:for-each select="member">
 <xsl:apply-templates/><xsl:if test="position() &lt; last()"> +
 </xsl:if>
 </xsl:for-each>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
 <xsl:template match="figure">
 <xsl:call-template name="process-id"/>
 .<xsl:apply-templates select="title"/>
 image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fileref"/>[]
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(1)"/>
 </xsl:template>
 
 <xsl:template match="informalfigure">
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(1)"/>
 <xsl:call-template name="process-id"/>
 image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fileref"/>[]
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(1)"/>
 </xsl:template>
 
 <xsl:template match="inlinemediaobject">image:<xsl:value-of select="imageobject[@role='web']/imagedata/@fileref"/>[]</xsl:template>
@@ -467,26 +450,26 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 <!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
 <xsl:template match="programlisting|screen">
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(1)"/>
 <xsl:choose>
   <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
   <xsl:when test="matches(., '----')">
     <xsl:text>[listing]</xsl:text>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>....</xsl:text>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:apply-templates/>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>....</xsl:text>
-    <xsl:text xml:space="preserve">&#10;&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(2)"/>
   </xsl:when>
   <xsl:otherwise>
     <xsl:text>----</xsl:text>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:apply-templates/>
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>----</xsl:text>
-    <xsl:text xml:space="preserve">&#10;&#10;</xsl:text>
+    <xsl:value-of select="util:carriage-returns(2)"/>
   </xsl:otherwise>
 </xsl:choose>
 <xsl:if test="following-sibling::*[1][self::calloutlist]">
@@ -540,8 +523,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 |===============
 <xsl:apply-templates select="descendant::row"/>
 |===============
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
 <xsl:template match="sidebar">
@@ -550,8 +532,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 ****
 <xsl:apply-templates select="*[not(self::title)]"/>
 ****
-<xsl:text xml:space="preserve">&#10;</xsl:text>
-<xsl:text xml:space="preserve">&#10;</xsl:text>
+<xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
 <xsl:template match="row">
@@ -560,7 +541,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     <xsl:apply-templates/>
   </xsl:for-each>
     <xsl:if test="not (entry/para)">
-    <xsl:text xml:space="preserve">&#10;</xsl:text>
+      <xsl:value-of select="util:carriage-returns(1)"/>
     </xsl:if>
 </xsl:template>
 
@@ -575,12 +556,15 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:call-template name="process-id"/>
   <xsl:sequence select="string-join (('&#10;&#10;', for $i in (1 to count (ancestor::section) + 3) return '='),'')"/>
   <xsl:apply-templates select="title"/>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
-  <xsl:text xml:space="preserve">&#10;</xsl:text>
+  <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
-<!-- Utility templates -->
+<!-- Utility functions/templates -->
+<xsl:function name="util:carriage-returns">
+  <xsl:param name="n"/>
+  <xsl:value-of select="string-join(for $i in (1 to $n) return '&#10;', '')"/>
+</xsl:function>
 
 <xsl:template name="strip-whitespace">
   <!-- Assumption is that $text-to-strip will be a text() node --> 
