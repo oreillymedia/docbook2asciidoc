@@ -93,49 +93,16 @@
 </xsl:template>
 
 <xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
-  <xsl:variable name="doc-name">
-    <xsl:choose>
-      <xsl:when test="self::chapter">
-        <xsl:text>ch</xsl:text>
-	<xsl:number count="chapter" level="any" format="01"/>
-      </xsl:when>
-      <xsl:when test="self::appendix">
-        <xsl:text>app</xsl:text>
-	<xsl:number count="appendix" level="any" format="a"/>
-      </xsl:when>
-      <xsl:when test="self::preface">
-	<xsl:text>pr</xsl:text>
-	<xsl:number count="preface" level="any" format="01"/>
-      </xsl:when>
-      <xsl:when test="self::colophon">
-        <xsl:text>colo</xsl:text>
-        <xsl:if test="count(//colophon) &gt; 1">
-	  <xsl:number count="colo" level="any" format="01"/>
-        </xsl:if>
-      </xsl:when>
-      <xsl:when test="self::dedication">
-        <xsl:text>dedication</xsl:text>
-        <xsl:if test="count(//dedication) &gt; 1">
-	  <xsl:number count="dedication" level="any" format="01"/>
-        </xsl:if>
-      </xsl:when>
-      <xsl:when test="self::glossary">
-        <xsl:text>glossary</xsl:text>
-        <xsl:if test="count(//glossary) &gt; 1">
-	  <xsl:number count="glossary" level="any" format="01"/>
-        </xsl:if>
-      </xsl:when>
-      <xsl:when test="self::bibliography">
-        <xsl:text>bibliography</xsl:text>
-        <xsl:if test="count(//bibliography) &gt; 1">
-	  <xsl:number count="bibliography" level="any" format="01"/>
-        </xsl:if>
-      </xsl:when>
-    </xsl:choose>
-    <xsl:text>.asciidoc</xsl:text>
-  </xsl:variable>
   <xsl:value-of select="util:carriage-returns(2)"/>
+  <xsl:variable name="doc-basename">
+    <xsl:call-template name="chunk-basename">
+      <xsl:with-param name="context-node" select="."/>
+    </xsl:call-template>
+  </xsl:variable>
   <xsl:text>include::</xsl:text>
+  <xsl:variable name="doc-name">
+    <xsl:value-of select="concat($doc-basename, '.asciidoc')"/>
+  </xsl:variable>
   <xsl:value-of select="$doc-name"/>
   <xsl:text>[]</xsl:text>
   <xsl:result-document href="{$doc-name}">
@@ -216,8 +183,7 @@
 </xsl:template>
   
 <xsl:template match="chapter">
-<xsl:call-template name="process-id"/>
-== <xsl:apply-templates select="title"/>
+<xsl:call-template name="process-id"/>== <xsl:apply-templates select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template> 
@@ -236,6 +202,41 @@
 == <xsl:value-of select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
+</xsl:template>
+
+<!-- Handling for info blocks -->
+<!-- Chunk in separate files if chunk-content is true -->
+<xsl:template match="chapterinfo|appendixinfo|prefaceinfo">
+  <xsl:variable name="info-content">
+    <!-- Do info content in a passthrough -->
+    <xsl:text>++++</xsl:text>
+    <xsl:value-of select="util:carriage-returns(1)"/>
+    <xsl:copy-of select="."/>
+    <xsl:value-of select="util:carriage-returns(1)"/>
+    <xsl:text>++++</xsl:text>
+    <xsl:value-of select="util:carriage-returns(2)"/>
+  </xsl:variable>
+  <xsl:choose>
+    <xsl:when test="$chunk-output != 'false'">
+      <xsl:variable name="info-file-basename">
+	<xsl:call-template name="chunk-basename">
+	  <xsl:with-param name="context-node" select="parent::*"/>
+	</xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="info-file-name" select="concat($info-file-basename, '_info.asciidoc')"/>
+      <xsl:text>include::</xsl:text>
+      <xsl:value-of select="$info-file-name"/>
+      <xsl:text>[]</xsl:text>
+      <xsl:value-of select="util:carriage-returns(2)"/>
+      <xsl:result-document href="{$info-file-name}">
+	<xsl:copy-of select="$info-content"/>
+      </xsl:result-document>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:copy-of select="$info-content"/>
+      <xsl:value-of select="util:carriage-returns(2)"/>
+    </xsl:otherwise>
+  </xsl:choose>
 </xsl:template>
 
 <xsl:template match="sect1">
@@ -534,6 +535,48 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:param name="n"/>
   <xsl:value-of select="string-join(for $i in (1 to $n) return '&#10;', '')"/>
 </xsl:function>
+
+<xsl:template name="chunk-basename">
+  <xsl:param name="context-node" select="."/>
+  <xsl:choose>
+    <xsl:when test="$context-node[self::chapter]">
+      <xsl:text>ch</xsl:text>
+      <xsl:number count="chapter" level="any" format="01"/>
+    </xsl:when>
+    <xsl:when test="$context-node[self::appendix]">
+      <xsl:text>app</xsl:text>
+      <xsl:number count="appendix" level="any" format="a"/>
+    </xsl:when>
+    <xsl:when test="$context-node[self::preface]">
+      <xsl:text>pr</xsl:text>
+      <xsl:number count="preface" level="any" format="01"/>
+    </xsl:when>
+    <xsl:when test="$context-node[self::colophon]">
+      <xsl:text>colo</xsl:text>
+      <xsl:if test="count(//colophon) &gt; 1">
+	<xsl:number count="colo" level="any" format="01"/>
+      </xsl:if>
+    </xsl:when>
+    <xsl:when test="$context-node[self::dedication]">
+      <xsl:text>dedication</xsl:text>
+      <xsl:if test="count(//dedication) &gt; 1">
+	<xsl:number count="dedication" level="any" format="01"/>
+      </xsl:if>
+    </xsl:when>
+    <xsl:when test="$context-node[self::glossary]">
+      <xsl:text>glossary</xsl:text>
+      <xsl:if test="count(//glossary) &gt; 1">
+	<xsl:number count="glossary" level="any" format="01"/>
+      </xsl:if>
+    </xsl:when>
+    <xsl:when test="$context-node[self::bibliography]">
+      <xsl:text>bibliography</xsl:text>
+      <xsl:if test="count(//bibliography) &gt; 1">
+	<xsl:number count="bibliography" level="any" format="01"/>
+      </xsl:if>
+    </xsl:when>
+  </xsl:choose>
+</xsl:template>
 
 <xsl:template name="strip-whitespace">
   <!-- Assumption is that $text-to-strip will be a text() node --> 
