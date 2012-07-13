@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<asc:config xmlns:asc="https://github.com/oreillymedia/docbook2asciidoc/blob/master/config.xml">
+<!-- Config file to encapsulate AsciiDoc markup specs for different types of elements -->
+<asc:context name="title">
+  <asc:docbookel name="book" markup="= "/>
+  <asc:docbookel name="part" markup="= "/>
+  <asc:docbookel name="chapter" markup="== "/>
+  <asc:docbookel name="sect1" markup="=== "/>
+  <asc:docbookel name="sect2" markup="==== "/>
+  <asc:docbookel name="sect3" markup="===== "/>
+  <asc:docbookel name="figure" markup="."/>
+  <asc:docbookel name="note" markup="."/>
+  <asc:docbookel name="tip" markup="."/>
+  <asc:docbookel name="warning" markup="."/>
+  <asc:docbookel name="caution" markup="."/>
+  <asc:docbookel name="important" markup="."/>
+  <asc:docbookel name="table" markup="."/>
+</asc:context>
+<asc:context name="formal.object.delimiter">
+</asc:context>
+</asc:config>

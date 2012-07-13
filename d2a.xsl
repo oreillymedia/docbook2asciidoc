@@ -2,7 +2,8 @@
  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
  xmlns:xs="http://www.w3.org/2001/XMLSchema"
  xmlns:util="http://github.com/oreillymedia/docbook2asciidoc/"
- exclude-result-prefixes="util"
+ xmlns:asc="https://github.com/oreillymedia/docbook2asciidoc/blob/master/config.xml"
+ exclude-result-prefixes="util asc"
  >
 
 
@@ -19,6 +20,8 @@
 
 <xsl:preserve-space elements="*"/>
 <xsl:strip-space elements="table row entry tgroup thead"/>
+
+<xsl:variable name="asc_config" select="document('asc_config.xml')"/>
 
 <xsl:template match="/book">
   <xsl:choose>
@@ -217,7 +220,7 @@
   
 <xsl:template match="chapter">
 <xsl:call-template name="process-id"/>
-== <xsl:apply-templates select="title"/>
+<xsl:apply-templates select="." mode="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template> 
@@ -238,25 +241,11 @@
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
-<xsl:template match="sect1">
+<xsl:template match="sect1|sect2|sect3">
 <xsl:call-template name="process-id"/>
-=== <xsl:apply-templates select="title"/>
-<xsl:value-of select="util:carriage-returns(2)"/>
-  <xsl:apply-templates select="*[not(self::title)]"/>
-</xsl:template>
-
-<xsl:template match="sect2">
-<xsl:call-template name="process-id"/>
-==== <xsl:apply-templates select="title"/>
-<xsl:value-of select="util:carriage-returns(2)"/>
-  <xsl:apply-templates select="*[not(self::title)]"/>
-</xsl:template>
-
-<xsl:template match="sect3">
-<xsl:call-template name="process-id"/>
-===== <xsl:apply-templates select="title"/>
-<xsl:value-of select="util:carriage-returns(2)"/>
-  <xsl:apply-templates select="*[not(self::title)]"/>
+<xsl:apply-templates select="." mode="title"/>
+<xsl:value-of select="util:carriage-returns(1)"/>
+<xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
 <xsl:template match="para|simpara">
@@ -535,6 +524,23 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:value-of select="string-join(for $i in (1 to $n) return '&#10;', '')"/>
 </xsl:function>
 
+<xsl:template match="*" mode="title">
+  <xsl:variable name="element-name" select="local-name()"/>
+  <xsl:if test="title">
+  <xsl:choose>
+    <xsl:when test="$asc_config/asc:config/asc:context[@name='title']/asc:docbookel[@name=$element-name]">
+      <xsl:value-of select="$asc_config/asc:config/asc:context[@name='title']/asc:docbookel[@name=$element-name]/@markup"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <!-- Default -->
+      <xsl:text>.</xsl:text>
+    </xsl:otherwise>
+  </xsl:choose>
+  <xsl:value-of select="title"/>
+  <xsl:value-of select="util:carriage-returns(1)"/>
+  </xsl:if>
+</xsl:template>
+
 <xsl:template name="strip-whitespace">
   <!-- Assumption is that $text-to-strip will be a text() node --> 
   <xsl:param name="text-to-strip" select="."/>
@@ -559,14 +565,6 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     <xsl:text xml:space="preserve">[[</xsl:text>
     <xsl:value-of select="@id"/>
     <xsl:text xml:space="preserve">]]&#10;</xsl:text>
-  </xsl:if>
-</xsl:template>
-
-<xsl:template match="*" mode="title">
-  <xsl:if test="title">
-    <xsl:text>.</xsl:text>
-    <xsl:apply-templates select="title"/>
-    <xsl:value-of select="util:carriage-returns(1)"/>
   </xsl:if>
 </xsl:template>
 
