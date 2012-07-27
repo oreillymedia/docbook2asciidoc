@@ -11,6 +11,9 @@
   <xsl:output-character character="&#xE801;" string="&lt;"/>
   <xsl:output-character character="&#xE802;" string="&gt;"/>
   <xsl:output-character character="&#xE803;" string="&amp;"/>
+  <xsl:output-character character='“' string="&amp;ldquo;"/>
+  <xsl:output-character character='”' string="&amp;rdquo;"/>
+  <xsl:output-character character="’" string="&amp;rsquo;"/>
 </xsl:character-map>
 
 <xsl:output method="xml" omit-xml-declaration="yes" use-character-maps="xml-reserved-chars"/>
