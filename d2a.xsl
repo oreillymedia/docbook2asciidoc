@@ -352,9 +352,13 @@ ____
 
 <xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test="contains(., '+')">$$</xsl:if><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')" /><xsl:if test="contains(., '+')">$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
 
-  <xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**</xsl:template>
+<xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**</xsl:template>
 
 <xsl:template match="replaceable">_++<xsl:value-of select="normalize-space(.)" />++_</xsl:template>
+  
+<xsl:template match="superscript">^<xsl:value-of select="normalize-space(.)" />^</xsl:template>
+
+<xsl:template match="subscript">~<xsl:value-of select="normalize-space(.)" />~</xsl:template>
 
 <xsl:template match="ulink">link:$$<xsl:value-of select="@url" />$$[<xsl:apply-templates/>]</xsl:template>
 
