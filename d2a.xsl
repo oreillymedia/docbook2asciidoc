@@ -262,6 +262,13 @@
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
+<!-- Use passthrough for sect4, as there is no AsciiDoc markup/formatting for these -->
+<xsl:template match="sect4">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+</xsl:template>
+
 <xsl:template match="para|simpara">
 <xsl:call-template name="process-id"/>
 <xsl:apply-templates select="node()"/>
