@@ -262,8 +262,8 @@
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
-<!-- Use passthrough for sect4, as there is no AsciiDoc markup/formatting for these -->
-<xsl:template match="sect4">
+<!-- Use passthrough for sect4 and sect5, as there is no AsciiDoc markup/formatting for these -->
+<xsl:template match="sect4|sect5">
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
