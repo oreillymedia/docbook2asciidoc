@@ -437,6 +437,13 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
 <xsl:template match="programlisting|screen">
 <xsl:value-of select="util:carriage-returns(1)"/>
+<!-- Preserve non-empty "language" attribute if present -->
+<xsl:if test="@language != ''">
+  <xsl:text>[source, </xsl:text>
+  <xsl:value-of select="@language"/>
+  <xsl:text>]</xsl:text>
+  <xsl:value-of select="util:carriage-returns(1)"/>
+</xsl:if>
 <xsl:choose>
   <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
   <xsl:when test="matches(., '----')">
@@ -444,7 +451,8 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>....</xsl:text>
     <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:apply-templates/>
+    <!-- Disable output escaping on code listing text to avoid any problems with roundtripping lt, gt, and amp chars -->
+    <xsl:value-of select="." disable-output-escaping="yes"/>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>....</xsl:text>
     <xsl:value-of select="util:carriage-returns(2)"/>
@@ -452,7 +460,8 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:otherwise>
     <xsl:text>----</xsl:text>
     <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:apply-templates/>
+    <!-- Disable output escaping on code listing text to avoid any problems with roundtripping lt, gt, and amp chars -->
+    <xsl:value-of select="." disable-output-escaping="yes"/>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>----</xsl:text>
     <xsl:value-of select="util:carriage-returns(2)"/>
