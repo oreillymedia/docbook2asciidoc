@@ -6,7 +6,7 @@
  >
 
 
-<!-- Mapping to allow use of XML reserved chars in AsciiDoc markup elements, e.g., angle brackets for cross-references --> 
+<!-- Mapping to allow use of XML reserved chars in AsciiDoc markup elements, e.g., angle brackets for cross-references -->
 <xsl:character-map name="xml-reserved-chars">
   <xsl:output-character character="&#xE801;" string="&lt;"/>
   <xsl:output-character character="&#xE802;" string="&gt;"/>
@@ -41,12 +41,12 @@
     </xsl:otherwise>
   </xsl:choose>
 </xsl:template>
-  
+
 <xsl:template match="//comment()">
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy/>
 ++++++++++++++++++++++++++++++++++++++
-    
+
 </xsl:template>
 
 <xsl:template match="processing-instruction()">
@@ -161,7 +161,7 @@
 <xsl:value-of select="replace(., '\n\s+', ' ', 'm')"/>
 </xsl:template>
 
-<!-- Strip leading whitespace from first text node in <term>, if it does not have preceding element siblings --> 
+<!-- Strip leading whitespace from first text node in <term>, if it does not have preceding element siblings -->
 <xsl:template match="term[count(element()) != 0]/text()[1][not(preceding-sibling::element())]">
   <xsl:call-template name="strip-whitespace">
     <xsl:with-param name="text-to-strip" select="."/>
@@ -169,7 +169,7 @@
   </xsl:call-template>
 </xsl:template>
 
-<!-- Strip trailing whitespace from last text node in <term>, if it does not have following element siblings --> 
+<!-- Strip trailing whitespace from last text node in <term>, if it does not have following element siblings -->
 <xsl:template match="term[count(element()) != 0]/text()[not(position() = 1)][last()][not(following-sibling::element())]">
   <xsl:call-template name="strip-whitespace">
     <xsl:with-param name="text-to-strip" select="."/>
@@ -217,13 +217,13 @@
 <xsl:apply-templates select="*[not(self::title)]"/>
 --
 </xsl:template>
-  
+
 <xsl:template match="chapter">
 <xsl:call-template name="process-id"/>
 == <xsl:apply-templates select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
-</xsl:template> 
+</xsl:template>
 
 <xsl:template match="appendix">
 <xsl:call-template name="process-id"/>
@@ -295,7 +295,7 @@
   <!-- Simple processing of attribution elements, placing a space between each
        and skipping <citetitle>, which is handled separately below -->
   <xsl:for-each select="attribution/text()|attribution//*[not(*)][not(self::citetitle)]">
-    <!--Output text as is, except escape commas as &#44; entities for 
+    <!--Output text as is, except escape commas as &#44; entities for
 	proper AsciiDoc attribute processing -->
     <xsl:value-of select="normalize-space(replace(., ',', '&#xE803;#44;'))"/>
     <xsl:text> </xsl:text>
@@ -362,7 +362,7 @@ ____
 <xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**</xsl:template>
 
 <xsl:template match="replaceable">_++<xsl:value-of select="normalize-space(.)" />++_</xsl:template>
-  
+
 <xsl:template match="superscript">^<xsl:value-of select="normalize-space(.)" />^</xsl:template>
 
 <xsl:template match="subscript">~<xsl:value-of select="normalize-space(.)" />~</xsl:template>
@@ -444,6 +444,13 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:text>]</xsl:text>
   <xsl:value-of select="util:carriage-returns(1)"/>
 </xsl:if>
+<!-- JBoss tweak, we use role the same as language -->
+    <xsl:if test="@role != ''">
+        <xsl:text>[source, </xsl:text>
+        <xsl:value-of select="@role"/>
+        <xsl:text>]</xsl:text>
+        <xsl:value-of select="util:carriage-returns(1)"/>
+    </xsl:if>
 <xsl:choose>
   <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
   <xsl:when test="matches(., '----')">
@@ -471,7 +478,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:call-template name="calloutlist_ad"/>
 </xsl:if>
 </xsl:template>
-  
+
 <!-- This template is called for an asciidoc-formatted calloutlist (not docbook passthrough) -->
 <xsl:template name="calloutlist_ad">
   <xsl:call-template name="process-id"/>
@@ -494,7 +501,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 </xsl:if>
 ++++++++++++++++++++++++++++++++++++++
 </xsl:template>
-  
+
 <!-- Repress callout text from appearing as duplicate text outside of the programlisting passthrough -->
 <xsl:template match="calloutlist/callout"/>
 
@@ -561,7 +568,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 </xsl:function>
 
 <xsl:template name="strip-whitespace">
-  <!-- Assumption is that $text-to-strip will be a text() node --> 
+  <!-- Assumption is that $text-to-strip will be a text() node -->
   <xsl:param name="text-to-strip" select="."/>
   <!-- By default, don't strip any whitespace -->
   <xsl:param name="leading-whitespace"/>
