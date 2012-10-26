@@ -556,6 +556,8 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:template match="section">
   <xsl:call-template name="process-id"/>
   <xsl:sequence select="string-join (('&#10;&#10;', for $i in (1 to count (ancestor::section) + 3) return '='),'')"/>
+  <!-- Make sure we have a space after the heading = -->
+  <xsl:text> </xsl:text>
   <xsl:apply-templates select="title"/>
   <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
