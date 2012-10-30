@@ -16,12 +16,17 @@
   <xsl:output-character character="’" string="&amp;rsquo;"/>
 </xsl:character-map>
 
-<xsl:output method="xml" omit-xml-declaration="yes" use-character-maps="xml-reserved-chars"/>
+<xsl:output method="text" omit-xml-declaration="yes" use-character-maps="xml-reserved-chars" indent="no"/>
 <xsl:param name="chunk-output">false</xsl:param>
 <xsl:param name="bookinfo-doc-name">book-docinfo.xml</xsl:param>
+  
+  <xsl:variable name="punctuation">
+    <xsl:text>.,:;!?&amp;'"()[]{}</xsl:text>
+  </xsl:variable>
 
-<xsl:preserve-space elements="*"/>
-<xsl:strip-space elements="table row entry tgroup thead"/>
+<!-- <xsl:preserve-space elements="*"/> -->
+<xsl:strip-space elements="*"/>
+<!-- <xsl:strip-space elements="table row entry tgroup thead"/> -->
 
 <xsl:template match="/book">
   <xsl:choose>
@@ -148,17 +153,28 @@
 <xsl:template match="indexterm" />
 
 <xsl:template match="para/text()">
-<xsl:value-of select="replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm')"/>
+  <xsl:value-of select="normalize-space(.)"/>
+  <xsl:if test="following-sibling::text()[1] != following-sibling::node()[1]"> <!-- Add a space if the next node is not a text node -->
+    <xsl:text> </xsl:text>
+  </xsl:if>
 </xsl:template>
 
-<xsl:template match="phrase/text()"><xsl:text/><xsl:value-of select="replace(., '\n\s+', ' ', 'm')"/><xsl:text/></xsl:template>
+<xsl:template match="phrase/text()">
+  <xsl:value-of select="normalize-space(.)"/>
+  <xsl:if test="following-sibling::text()[1] != following-sibling::node()[1]"> <!-- Add a space if the next node is not a text node -->
+    <xsl:text> </xsl:text>
+  </xsl:if>
+</xsl:template>
 
 <xsl:template match="ulink/text()">
-<xsl:value-of select="replace(., '\n\s+', ' ', 'm')"/>
+  <xsl:value-of select="normalize-space(.)"/>
 </xsl:template>
 
 <xsl:template match="title/text()">
-<xsl:value-of select="replace(., '\n\s+', ' ', 'm')"/>
+  <xsl:value-of select="normalize-space(.)"/>
+  <xsl:if test="following-sibling::text()[1] != following-sibling::node()[1]"> <!-- Add a space if the next node is not a text node -->
+    <xsl:text> </xsl:text>
+  </xsl:if>
 </xsl:template>
 
 <!-- Strip leading whitespace from first text node in <term>, if it does not have preceding element siblings -->
@@ -184,11 +200,11 @@
 
 <!-- Text nodes in <term> that are between elements that contain only whitespace should be normalized to one space -->
 <xsl:template match="term/text()[not(position() = 1)][not(position() = last())][matches(., '^[\s\n]+$', 'm')]">
-  <xsl:value-of select="replace(., '^[\s\n]+$', ' ', 'm')"/>
+  <xsl:value-of select="normalize-space(.)"/>
 </xsl:template>
 
 <xsl:template match="member/text()">
-<xsl:value-of select="replace(., '^\s+', '', 'm')"/>
+  <xsl:value-of select="normalize-space(.)"/>
 </xsl:template>
 
 <!-- Output bookinfo children into book-docinfo.xml -->
@@ -220,7 +236,7 @@
 
 <xsl:template match="chapter">
 <xsl:call-template name="process-id"/>
-== <xsl:apply-templates select="title"/>
+<xsl:text>== </xsl:text><xsl:apply-templates select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
@@ -338,7 +354,12 @@ ____
 <xsl:apply-templates select="." mode="title"/>====
 <xsl:apply-templates select="node()[not(self::title)]"/>
 ====
-<xsl:value-of select="util:carriage-returns(2)"/>
+<!--<xsl:value-of select="util:carriage-returns(2)"/>-->
+</xsl:template>
+
+<xsl:template match="tip/para|warning/para|note/para|caution/para|important/para">
+<!--Special handling for admonition paras to contract whitespace-->
+<xsl:apply-templates select="node()"/>
 </xsl:template>
 
 <xsl:template match="term"><xsl:apply-templates select="node()"/>:: </xsl:template>
@@ -349,31 +370,31 @@ ____
 
 <xsl:template match="phrase"><xsl:apply-templates /></xsl:template>
 
-<xsl:template match="emphasis [@role='bold']">*<xsl:value-of select="." />*</xsl:template>
+<xsl:template match="emphasis [@role='bold']">*<xsl:value-of select="." />*<xsl:text> </xsl:text></xsl:template>
 
 <xsl:template match="filename">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-<xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(.)" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+<xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(.)" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if><xsl:text> </xsl:text></xsl:template>
 
-<xsl:template match="command">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+<xsl:template match="command">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if><xsl:text> </xsl:text></xsl:template>
 
-<xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test="contains(., '+')">$$</xsl:if><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')" /><xsl:if test="contains(., '+')">$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
+<xsl:template match="literal|code"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test="contains(., '+')">$$</xsl:if><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')" /><xsl:if test="contains(., '+')">$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if><xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-<xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**</xsl:template>
+<xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**<xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-<xsl:template match="replaceable">_++<xsl:value-of select="normalize-space(.)" />++_</xsl:template>
+<xsl:template match="replaceable">_++<xsl:value-of select="normalize-space(.)" />++_<xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-<xsl:template match="superscript">^<xsl:value-of select="normalize-space(.)" />^</xsl:template>
+<xsl:template match="superscript">^<xsl:value-of select="normalize-space(.)" />^<xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-<xsl:template match="subscript">~<xsl:value-of select="normalize-space(.)" />~</xsl:template>
+<xsl:template match="subscript">~<xsl:value-of select="normalize-space(.)" />~<xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-<xsl:template match="ulink">link:$$<xsl:value-of select="@url" />$$[<xsl:apply-templates/>]</xsl:template>
+<xsl:template match="ulink">link:$$<xsl:value-of select="@url" />$$[<xsl:apply-templates/>]<xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-<xsl:template match="email"><xsl:value-of select="normalize-space(.)" /></xsl:template>
+<xsl:template match="email"><xsl:value-of select="normalize-space(.)" /><xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-<xsl:template match="xref">&#xE801;&#xE801;<xsl:value-of select="@linkend" />&#xE802;&#xE802;</xsl:template>
+<xsl:template match="xref">&#xE801;&#xE801;<xsl:value-of select="@linkend" />&#xE802;&#xE802;<xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-<xsl:template match="link">&#xE801;&#xE801;<xsl:value-of select="@linkend" />,<xsl:value-of select="."/>&#xE802;&#xE802;</xsl:template>
+<xsl:template match="link">&#xE801;&#xE801;<xsl:value-of select="@linkend" />,<xsl:value-of select="."/>&#xE802;&#xE802;<xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
 <xsl:template match="variablelist">
 <xsl:call-template name="process-id"/>
@@ -409,7 +430,7 @@ ____
 <xsl:apply-templates/><xsl:if test="position() &lt; last()"> +
 </xsl:if>
 </xsl:for-each>
-<xsl:value-of select="util:carriage-returns(2)"/>
+<!--<xsl:value-of select="util:carriage-returns(2)"/>-->
 </xsl:template>
 
 <xsl:template match="figure">
@@ -600,7 +621,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:if test="title">
     <xsl:text>.</xsl:text>
     <xsl:apply-templates select="title"/>
-    <xsl:value-of select="util:carriage-returns(1)"/>
+    <xsl:value-of select="util:carriage-returns(2)"/>
   </xsl:if>
 </xsl:template>
 
