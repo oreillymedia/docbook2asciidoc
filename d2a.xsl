@@ -307,7 +307,14 @@
   <xsl:template match="para|simpara">
     <xsl:call-template name="process-id"/>
     <xsl:apply-templates select="node()"/>
-    <xsl:value-of select="util:carriage-returns(2)"/>
+    <xsl:choose>
+      <xsl:when test="parent::listitem">
+        <xsl:value-of select="util:carriage-returns(1)"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="util:carriage-returns(2)"/>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="formalpara">
@@ -390,6 +397,9 @@
   <xsl:template match="tip/para|warning/para|note/para|caution/para|important/para">
     <!--Special handling for admonition paras to contract whitespace-->
     <xsl:apply-templates select="node()"/>
+    <xsl:if test="position() != last()">
+      <xsl:value-of select="util:carriage-returns(2)"/>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="term">
@@ -580,7 +590,11 @@
     <xsl:for-each select="listitem">
       <xsl:text>* </xsl:text>
       <xsl:apply-templates/>
-      <xsl:value-of select="util:carriage-returns(2)"/>
+      <xsl:choose>
+        <xsl:when test="position() = last()">
+          <xsl:value-of select="util:carriage-returns(1)"/>
+        </xsl:when>
+      </xsl:choose>
     </xsl:for-each>
   </xsl:template>
 
