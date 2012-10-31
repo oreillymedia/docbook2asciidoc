@@ -12,8 +12,7 @@
     <xsl:output-character character="’" string="&amp;rsquo;"/>
   </xsl:character-map>
 
-  <xsl:output method="text" omit-xml-declaration="yes" use-character-maps="xml-reserved-chars"
-    indent="no"/>
+  <xsl:output method="text" omit-xml-declaration="yes" use-character-maps="xml-reserved-chars" indent="no"/>
   <xsl:param name="chunk-output">false</xsl:param>
   <xsl:param name="bookinfo-doc-name">book-docinfo.xml</xsl:param>
 
@@ -100,8 +99,7 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography"
-    mode="chunk">
+  <xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
     <xsl:variable name="doc-name">
       <xsl:choose>
         <xsl:when test="self::chapter">
@@ -190,8 +188,7 @@
   </xsl:template>
 
   <!-- Strip trailing whitespace from last text node in <term>, if it does not have following element siblings -->
-  <xsl:template
-    match="term[count(element()) != 0]/text()[not(position() = 1)][last()][not(following-sibling::element())]">
+  <xsl:template match="term[count(element()) != 0]/text()[not(position() = 1)][last()][not(following-sibling::element())]">
     <xsl:call-template name="strip-whitespace">
       <xsl:with-param name="text-to-strip" select="."/>
       <xsl:with-param name="trailing-whitespace" select="'strip'"/>
@@ -204,8 +201,7 @@
   </xsl:template>
 
   <!-- Text nodes in <term> that are between elements that contain only whitespace should be normalized to one space -->
-  <xsl:template
-    match="term/text()[not(position() = 1)][not(position() = last())][matches(., '^[\s\n]+$', 'm')]">
+  <xsl:template match="term/text()[not(position() = 1)][not(position() = last())][matches(., '^[\s\n]+$', 'm')]">
     <xsl:value-of select="normalize-space(.)"/>
   </xsl:template>
 
@@ -332,10 +328,12 @@
     <xsl:if test="attribution">
       <xsl:text>, </xsl:text>
       <!-- Simple processing of attribution elements, placing a space between each
-       and skipping <citetitle>, which is handled separately below -->
+           and skipping <citetitle>, which is handled separately below 
+      -->
       <xsl:for-each select="attribution/text()|attribution//*[not(*)][not(self::citetitle)]">
-        <!--Output text as is, except escape commas as &#44; entities for
-	proper AsciiDoc attribute processing -->
+        <!-- Output text as is, except escape commas as &#44; entities for
+	           proper AsciiDoc attribute processing 
+        -->
         <xsl:value-of select="normalize-space(replace(., ',', '&#xE803;#44;'))"/>
         <xsl:text> </xsl:text>
       </xsl:for-each>
@@ -411,35 +409,66 @@
     <xsl:text>*</xsl:text>
     <xsl:value-of select="."/>
     <xsl:text>*</xsl:text>
-    <xsl:text> </xsl:text>
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
   </xsl:template>
-  <!-- TODO test for punctuation or next next node -->
 
-  <xsl:template match="filename">_<xsl:if test="contains(., '~') or contains(., '_')"
-      ><xsl:text>$$</xsl:text></xsl:if><xsl:value-of
-      select="normalize-space(replace(., '([\+])', '\\$1', 'm'))"/><xsl:if
-      test="contains(., '~') or contains(., '_')"
-      ><xsl:text>$$</xsl:text></xsl:if><xsl:text>_</xsl:text><xsl:if
-      test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"
-      ><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <xsl:template match="filename">
+    <xsl:text>_</xsl:text>
+    <xsl:if test="contains(., '~') or contains(., '_')">
+      <xsl:text>$$</xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))"/>
+    <xsl:if test="contains(., '~') or contains(., '_')">
+      <xsl:text>$$</xsl:text>
+    </xsl:if>
+    <xsl:text>_</xsl:text>
+    <xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')">
+      <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+        <xsl:text> </xsl:text>
+      </xsl:if>
+    </xsl:if>
+  </xsl:template>
 
-  <xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')"
-      ><xsl:text>$$</xsl:text></xsl:if><xsl:value-of select="normalize-space(.)"/><xsl:if
-      test="contains(., '~') or contains(., '_')"
-      ><xsl:text>$$</xsl:text></xsl:if><xsl:text>_</xsl:text><xsl:if
-      test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"
-      ><xsl:text> </xsl:text></xsl:if><xsl:text> </xsl:text></xsl:template>
+  <xsl:template match="emphasis">
+    <xsl:text>_</xsl:text>
+    <xsl:if test="contains(., '~') or contains(., '_')">
+      <xsl:text>$$</xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="contains(., '~') or contains(., '_')">
+      <xsl:text>$$</xsl:text>
+    </xsl:if>
+    <xsl:text>_</xsl:text>
+    <xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
-  <xsl:template match="command">_<xsl:if test="contains(., '~') or contains(., '_')"
-      ><xsl:text>$$</xsl:text></xsl:if><xsl:value-of
-      select="normalize-space(replace(., '([\+])', '\\$1', 'm'))"/><xsl:if
-      test="contains(., '~') or contains(., '_')"><xsl:text>$$</xsl:text></xsl:if>_<xsl:if
-      test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"
-      ><xsl:text> </xsl:text></xsl:if><xsl:text> </xsl:text></xsl:template>
+  <xsl:template match="command">
+    <xsl:text>_</xsl:text>
+    <xsl:if test="contains(., '~') or contains(., '_')">
+      <xsl:text>$$</xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))"/>
+    <xsl:if test="contains(., '~') or contains(., '_')">
+      <xsl:text>$$</xsl:text>
+    </xsl:if>
+    <xsl:text>_</xsl:text>
+    <xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
   <xsl:template match="literal|code">
-    <xsl:if
-      test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">
+    <xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">
       <xsl:text>+</xsl:text>
     </xsl:if>
     <xsl:text>+</xsl:text>
@@ -451,12 +480,10 @@
       <xsl:text>$$</xsl:text>
     </xsl:if>
     <xsl:text>+</xsl:text>
-    <xsl:if
-      test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">
+    <xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">
       <xsl:text>+</xsl:text>
     </xsl:if>
-    <xsl:if
-      test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
       <xsl:text> </xsl:text>
     </xsl:if>
   </xsl:template>
@@ -465,8 +492,7 @@
     <xsl:text>**`</xsl:text>
     <xsl:value-of select="normalize-space(.)"/>
     <xsl:text>`**</xsl:text>
-    <xsl:if
-      test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
       <xsl:text> </xsl:text>
     </xsl:if>
   </xsl:template>
@@ -475,8 +501,7 @@
     <xsl:text>_++</xsl:text>
     <xsl:value-of select="normalize-space(.)"/>
     <xsl:text>++_</xsl:text>
-    <xsl:if
-      test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
       <xsl:text> </xsl:text>
     </xsl:if>
   </xsl:template>
@@ -485,8 +510,7 @@
     <xsl:text>^</xsl:text>
     <xsl:value-of select="normalize-space(.)"/>
     <xsl:text>^</xsl:text>
-    <xsl:if
-      test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
       <xsl:text> </xsl:text>
     </xsl:if>
   </xsl:template>
@@ -495,8 +519,7 @@
     <xsl:text>~</xsl:text>
     <xsl:value-of select="normalize-space(.)"/>
     <xsl:text>~</xsl:text>
-    <xsl:if
-      test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
       <xsl:text> </xsl:text>
     </xsl:if>
   </xsl:template>
@@ -507,16 +530,14 @@
     <xsl:text>$$[</xsl:text>
     <xsl:apply-templates/>
     <xsl:text>]</xsl:text>
-    <xsl:if
-      test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
       <xsl:text> </xsl:text>
     </xsl:if>
   </xsl:template>
 
   <xsl:template match="email">
     <xsl:value-of select="normalize-space(.)"/>
-    <xsl:if
-      test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
       <xsl:text> </xsl:text>
     </xsl:if>
   </xsl:template>
@@ -525,8 +546,7 @@
     <xsl:text>&#xE801;&#xE801;</xsl:text>
     <xsl:value-of select="@linkend"/>
     <xsl:text>&#xE802;&#xE802;</xsl:text>
-    <xsl:if
-      test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
       <xsl:text> </xsl:text>
     </xsl:if>
   </xsl:template>
@@ -537,8 +557,7 @@
     <xsl:text>,</xsl:text>
     <xsl:value-of select="."/>
     <xsl:text>&#xE802;&#xE802;</xsl:text>
-    <xsl:if
-      test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
+    <xsl:if test="(following-sibling::text()[1] = following-sibling::node()[1]) and not(contains($punctuation, substring(following-sibling::text()[1], 1, 1)))">
       <xsl:text> </xsl:text>
     </xsl:if>
   </xsl:template>
@@ -599,23 +618,48 @@
     <xsl:apply-templates select="title"/>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>image::</xsl:text>
-    <xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fileref"/>
-    <xsl:text>[]</xsl:text>
+    <xsl:if test="imageobject[@role = 'web']">
+      <xsl:apply-templates select="imageobject" />
+    </xsl:if>
     <xsl:value-of select="util:carriage-returns(1)"/>
   </xsl:template>
 
   <xsl:template match="informalfigure">
     <xsl:call-template name="process-id"/>
     <xsl:text>image::</xsl:text>
-    <xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fileref"/>
-    <xsl:text>[]</xsl:text>
+    <xsl:if test="imageobject[@role = 'web']">
+      <xsl:apply-templates select="imageobject" />
+    </xsl:if>
     <xsl:value-of select="util:carriage-returns(1)"/>
   </xsl:template>
 
   <xsl:template match="inlinemediaobject">
     <xsl:text>image:</xsl:text>
-    <xsl:value-of select="imageobject[@role='web']/imagedata/@fileref"/>
-    <xsl:text>[]</xsl:text>
+    <xsl:if test="imageobject[@role = 'web']">
+      <xsl:apply-templates select="imageobject" />
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Could be a JBoss tweak for a mediaobject outside of a figure -->
+  <xsl:template match="mediaobject/imageobject">
+    <xsl:text>image::</xsl:text>
+    <xsl:apply-templates select="imagedata" />
+    <xsl:value-of select="util:carriage-returns(2)"/>
+  </xsl:template>
+  
+  <xsl:template match="imagedata">
+    <xsl:value-of select="@fileref"/>
+    <xsl:text>[</xsl:text>
+    <xsl:for-each select="@*[name() != 'fileref' and name() != 'format']">
+      <xsl:copy-of select="name()"/>
+      <xsl:text>="</xsl:text>
+      <xsl:value-of select="."/>
+      <xsl:text>"</xsl:text>
+      <xsl:if test="position() != last()">
+        <xsl:text>, </xsl:text>
+      </xsl:if>
+    </xsl:for-each>
+    <xsl:text>]</xsl:text>
   </xsl:template>
 
   <xsl:template match="example">
@@ -712,14 +756,12 @@
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>++++++++++++++++++++++++++++++++++++++</xsl:text>
     <xsl:value-of select="util:carriage-returns(2)"/>
-
   </xsl:template>
 
   <xsl:template match="co">
     <xsl:variable name="curr" select="@id"/>
     <xsl:text>&#xE801;</xsl:text>
-    <xsl:value-of
-      select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>
+    <xsl:value-of select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>
     <xsl:text>&#xE802;</xsl:text>
   </xsl:template>
 
@@ -758,8 +800,7 @@
     <xsl:if test="not (entry/para)">
       <xsl:value-of select="util:carriage-returns(1)"/>
     </xsl:if>
-  </xsl:template>
-
+  </xsl:template> 
 
   <xsl:template match="footnote">
     <xsl:text>footnote:[</xsl:text>
@@ -769,8 +810,7 @@
 
   <xsl:template match="section">
     <xsl:call-template name="process-id"/>
-    <xsl:sequence
-      select="string-join (('', for $i in (1 to count (ancestor::section) + 3) return '='),'')"/>
+    <xsl:sequence select="string-join (('', for $i in (1 to count (ancestor::section) + 3) return '='),'')"/>
     <!-- Make sure we have a space after the heading = -->
     <xsl:text> </xsl:text>
     <xsl:apply-templates select="title"/>
@@ -819,5 +859,5 @@
       <xsl:value-of select="util:carriage-returns(1)"/>
     </xsl:if>
   </xsl:template>
-
 </xsl:stylesheet>
+
