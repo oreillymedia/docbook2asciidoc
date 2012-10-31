@@ -42,11 +42,11 @@
   </xsl:template>
 
   <xsl:template match="//comment()">
-    <xsl:text>++++++++++++++++++++++++++++++++++++++</xsl:text>
+    <xsl:text>//////////////////////////////////////</xsl:text>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:copy/>
     <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:text>++++++++++++++++++++++++++++++++++++++</xsl:text>
+    <xsl:text>//////////////////////////////////////</xsl:text>
     <xsl:value-of select="util:carriage-returns(2)"/>
   </xsl:template>
 
@@ -687,7 +687,7 @@
   
   <!-- Possible JBoss-only tweak for adding the areaspec and callout list within comments for the author to go back and fix -->
   <xsl:template match="programlistingco|screenco">
-    <xsl:text>++++++++++++++++++++++++++++++++++++++</xsl:text>
+    <xsl:text>//////////////////////////////////////</xsl:text>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:for-each select="calloutlist/callout">
       <xsl:variable name="arearefs" select="@arearefs" />
@@ -696,7 +696,7 @@
       <xsl:text>) </xsl:text>
       <xsl:apply-templates />
     </xsl:for-each>
-    <xsl:text>++++++++++++++++++++++++++++++++++++++</xsl:text>
+    <xsl:text>//////////////////////////////////////</xsl:text>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:apply-templates select="programlisting|screenlisting" />
   </xsl:template>
