@@ -42,9 +42,10 @@
   </xsl:template>
 
   <xsl:template match="//comment()">
+    <xsl:value-of select="util:carriage-returns(2)"/>
     <xsl:text>//////////////////////////////////////</xsl:text>
     <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:copy/>
+    <xsl:copy-of select="." />
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>//////////////////////////////////////</xsl:text>
     <xsl:value-of select="util:carriage-returns(2)"/>
@@ -153,7 +154,7 @@
 
   <xsl:template match="para/text()">
     <xsl:value-of select="normalize-space(.)"/>
-    <xsl:if test="following-sibling::text()[1] != following-sibling::node()[1]">
+    <xsl:if test="following-sibling::text()[1] != following-sibling::node()[1] or following-sibling::node()[1][position() = last()]">
       <!-- Add a space if the next node is not a text node -->
       <xsl:text> </xsl:text>
     </xsl:if>
@@ -161,7 +162,7 @@
 
   <xsl:template match="phrase/text()">
     <xsl:value-of select="normalize-space(.)"/>
-    <xsl:if test="following-sibling::text()[1] != following-sibling::node()[1]">
+    <xsl:if test="following-sibling::text()[1] != following-sibling::node()[1] or following-sibling::node()[1][position() = last()]">
       <!-- Add a space if the next node is not a text node -->
       <xsl:text> </xsl:text>
     </xsl:if>
@@ -173,7 +174,7 @@
 
   <xsl:template match="title/text()">
     <xsl:value-of select="normalize-space(.)"/>
-    <xsl:if test="following-sibling::text()[1] != following-sibling::node()[1]">
+    <xsl:if test="following-sibling::text()[1] != following-sibling::node()[1] or following-sibling::node()[1][position() = last()]">
       <!-- Add a space if the next node is not a text node -->
       <xsl:text> </xsl:text>
     </xsl:if>
@@ -211,13 +212,9 @@
 
   <!-- Output bookinfo children into book-docinfo.xml -->
   <xsl:template match="bookinfo" mode="#all">
-    <xsl:result-document href="{$bookinfo-doc-name}">
-      <xsl:apply-templates mode="bookinfo-children"/>
+    <xsl:result-document href="{$bookinfo-doc-name}" method="xml" indent="yes">
+      <xsl:copy-of select="node()" />
     </xsl:result-document>
-  </xsl:template>
-
-  <xsl:template match="bookinfo/*" mode="bookinfo-children">
-    <xsl:copy-of select="."/>
   </xsl:template>
 
   <xsl:template match="part">
@@ -592,7 +589,7 @@
       <xsl:apply-templates/>
       <xsl:choose>
         <xsl:when test="position() = last()">
-          <xsl:value-of select="util:carriage-returns(1)"/>
+          <xsl:value-of select="util:carriage-returns(2)"/>
         </xsl:when>
       </xsl:choose>
     </xsl:for-each>
