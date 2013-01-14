@@ -11,6 +11,9 @@
   <xsl:output-character character="&#xE801;" string="&lt;"/>
   <xsl:output-character character="&#xE802;" string="&gt;"/>
   <xsl:output-character character="&#xE803;" string="&amp;"/>
+  <xsl:output-character character='“' string="&amp;ldquo;"/>
+  <xsl:output-character character='”' string="&amp;rdquo;"/>
+  <xsl:output-character character="’" string="&amp;rsquo;"/>
 </xsl:character-map>
 
 <xsl:output method="xml" omit-xml-declaration="yes" use-character-maps="xml-reserved-chars"/>
@@ -93,16 +96,49 @@
 </xsl:template>
 
 <xsl:template match="chapter|appendix|preface|colophon|dedication|glossary|bibliography" mode="chunk">
-  <xsl:value-of select="util:carriage-returns(2)"/>
-  <xsl:variable name="doc-basename">
-    <xsl:call-template name="chunk-basename">
-      <xsl:with-param name="context-node" select="."/>
-    </xsl:call-template>
-  </xsl:variable>
-  <xsl:text>include::</xsl:text>
   <xsl:variable name="doc-name">
-    <xsl:value-of select="concat($doc-basename, '.asciidoc')"/>
+    <xsl:choose>
+      <xsl:when test="self::chapter">
+        <xsl:text>ch</xsl:text>
+	<xsl:number count="chapter" level="any" format="01"/>
+      </xsl:when>
+      <xsl:when test="self::appendix">
+        <xsl:text>app</xsl:text>
+	<xsl:number count="appendix" level="any" format="a"/>
+      </xsl:when>
+      <xsl:when test="self::preface">
+	<xsl:text>pr</xsl:text>
+	<xsl:number count="preface" level="any" format="01"/>
+      </xsl:when>
+      <xsl:when test="self::colophon">
+        <xsl:text>colo</xsl:text>
+        <xsl:if test="count(//colophon) &gt; 1">
+	  <xsl:number count="colo" level="any" format="01"/>
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="self::dedication">
+        <xsl:text>dedication</xsl:text>
+        <xsl:if test="count(//dedication) &gt; 1">
+	  <xsl:number count="dedication" level="any" format="01"/>
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="self::glossary">
+        <xsl:text>glossary</xsl:text>
+        <xsl:if test="count(//glossary) &gt; 1">
+	  <xsl:number count="glossary" level="any" format="01"/>
+        </xsl:if>
+      </xsl:when>
+      <xsl:when test="self::bibliography">
+        <xsl:text>bibliography</xsl:text>
+        <xsl:if test="count(//bibliography) &gt; 1">
+	  <xsl:number count="bibliography" level="any" format="01"/>
+        </xsl:if>
+      </xsl:when>
+    </xsl:choose>
+    <xsl:text>.asciidoc</xsl:text>
   </xsl:variable>
+  <xsl:value-of select="util:carriage-returns(2)"/>
+  <xsl:text>include::</xsl:text>
   <xsl:value-of select="$doc-name"/>
   <xsl:text>[]</xsl:text>
   <xsl:result-document href="{$doc-name}">
@@ -183,7 +219,8 @@
 </xsl:template>
   
 <xsl:template match="chapter">
-<xsl:call-template name="process-id"/>== <xsl:apply-templates select="title"/>
+<xsl:call-template name="process-id"/>
+== <xsl:apply-templates select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template> 
@@ -202,41 +239,6 @@
 == <xsl:value-of select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
-</xsl:template>
-
-<!-- Handling for info blocks -->
-<!-- Chunk in separate files if chunk-content is true -->
-<xsl:template match="chapterinfo|appendixinfo|prefaceinfo">
-  <xsl:variable name="info-content">
-    <!-- Do info content in a passthrough -->
-    <xsl:text>++++</xsl:text>
-    <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:copy-of select="."/>
-    <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:text>++++</xsl:text>
-    <xsl:value-of select="util:carriage-returns(2)"/>
-  </xsl:variable>
-  <xsl:choose>
-    <xsl:when test="$chunk-output != 'false'">
-      <xsl:variable name="info-file-basename">
-	<xsl:call-template name="chunk-basename">
-	  <xsl:with-param name="context-node" select="parent::*"/>
-	</xsl:call-template>
-      </xsl:variable>
-      <xsl:variable name="info-file-name" select="concat($info-file-basename, '_info.asciidoc')"/>
-      <xsl:text>include::</xsl:text>
-      <xsl:value-of select="$info-file-name"/>
-      <xsl:text>[]</xsl:text>
-      <xsl:value-of select="util:carriage-returns(2)"/>
-      <xsl:result-document href="{$info-file-name}">
-	<xsl:copy-of select="$info-content"/>
-      </xsl:result-document>
-    </xsl:when>
-    <xsl:otherwise>
-      <xsl:copy-of select="$info-content"/>
-      <xsl:value-of select="util:carriage-returns(2)"/>
-    </xsl:otherwise>
-  </xsl:choose>
 </xsl:template>
 
 <xsl:template match="sect1">
@@ -258,6 +260,13 @@
 ===== <xsl:apply-templates select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
+</xsl:template>
+
+<!-- Use passthrough for sect4 and sect5, as there is no AsciiDoc markup/formatting for these -->
+<xsl:template match="sect4|sect5">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
 </xsl:template>
 
 <xsl:template match="para|simpara">
@@ -346,11 +355,17 @@ ____
 
 <xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(.)" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
+<xsl:template match="command">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+
 <xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test="contains(., '+')">$$</xsl:if><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')" /><xsl:if test="contains(., '+')">$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
 
-  <xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**</xsl:template>
+<xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**</xsl:template>
 
 <xsl:template match="replaceable">_++<xsl:value-of select="normalize-space(.)" />++_</xsl:template>
+  
+<xsl:template match="superscript">^<xsl:value-of select="normalize-space(.)" />^</xsl:template>
+
+<xsl:template match="subscript">~<xsl:value-of select="normalize-space(.)" />~</xsl:template>
 
 <xsl:template match="ulink">link:$$<xsl:value-of select="@url" />$$[<xsl:apply-templates/>]</xsl:template>
 
@@ -422,6 +437,13 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
 <xsl:template match="programlisting|screen">
 <xsl:value-of select="util:carriage-returns(1)"/>
+<!-- Preserve non-empty "language" attribute if present -->
+<xsl:if test="@language != ''">
+  <xsl:text>[source, </xsl:text>
+  <xsl:value-of select="@language"/>
+  <xsl:text>]</xsl:text>
+  <xsl:value-of select="util:carriage-returns(1)"/>
+</xsl:if>
 <xsl:choose>
   <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
   <xsl:when test="matches(., '----')">
@@ -429,7 +451,8 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>....</xsl:text>
     <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:apply-templates/>
+    <!-- Disable output escaping on code listing text to avoid any problems with roundtripping lt, gt, and amp chars -->
+    <xsl:value-of select="." disable-output-escaping="yes"/>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>....</xsl:text>
     <xsl:value-of select="util:carriage-returns(2)"/>
@@ -437,7 +460,8 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:otherwise>
     <xsl:text>----</xsl:text>
     <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:apply-templates/>
+    <!-- Disable output escaping on code listing text to avoid any problems with roundtripping lt, gt, and amp chars -->
+    <xsl:value-of select="." disable-output-escaping="yes"/>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>----</xsl:text>
     <xsl:value-of select="util:carriage-returns(2)"/>
@@ -535,48 +559,6 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:param name="n"/>
   <xsl:value-of select="string-join(for $i in (1 to $n) return '&#10;', '')"/>
 </xsl:function>
-
-<xsl:template name="chunk-basename">
-  <xsl:param name="context-node" select="."/>
-  <xsl:choose>
-    <xsl:when test="$context-node[self::chapter]">
-      <xsl:text>ch</xsl:text>
-      <xsl:number count="chapter" level="any" format="01"/>
-    </xsl:when>
-    <xsl:when test="$context-node[self::appendix]">
-      <xsl:text>app</xsl:text>
-      <xsl:number count="appendix" level="any" format="a"/>
-    </xsl:when>
-    <xsl:when test="$context-node[self::preface]">
-      <xsl:text>pr</xsl:text>
-      <xsl:number count="preface" level="any" format="01"/>
-    </xsl:when>
-    <xsl:when test="$context-node[self::colophon]">
-      <xsl:text>colo</xsl:text>
-      <xsl:if test="count(//colophon) &gt; 1">
-	<xsl:number count="colo" level="any" format="01"/>
-      </xsl:if>
-    </xsl:when>
-    <xsl:when test="$context-node[self::dedication]">
-      <xsl:text>dedication</xsl:text>
-      <xsl:if test="count(//dedication) &gt; 1">
-	<xsl:number count="dedication" level="any" format="01"/>
-      </xsl:if>
-    </xsl:when>
-    <xsl:when test="$context-node[self::glossary]">
-      <xsl:text>glossary</xsl:text>
-      <xsl:if test="count(//glossary) &gt; 1">
-	<xsl:number count="glossary" level="any" format="01"/>
-      </xsl:if>
-    </xsl:when>
-    <xsl:when test="$context-node[self::bibliography]">
-      <xsl:text>bibliography</xsl:text>
-      <xsl:if test="count(//bibliography) &gt; 1">
-	<xsl:number count="bibliography" level="any" format="01"/>
-      </xsl:if>
-    </xsl:when>
-  </xsl:choose>
-</xsl:template>
 
 <xsl:template name="strip-whitespace">
   <!-- Assumption is that $text-to-strip will be a text() node --> 
