@@ -220,9 +220,14 @@
   
 <xsl:template match="chapter">
 <xsl:call-template name="process-id"/>
+<xsl:if test="chapterinfo">
+  <xsl:call-template name="process.info.block">
+    <xsl:with-param name="infoblock" select="chapterinfo"/>
+  </xsl:call-template>
+</xsl:if>
 == <xsl:apply-templates select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
-  <xsl:apply-templates select="*[not(self::title)]"/>
+  <xsl:apply-templates select="*[not(self::title|self::chapterinfo)]"/>
 </xsl:template> 
 
 <xsl:template match="appendix">
@@ -577,6 +582,41 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
       <xsl:value-of select="replace(., '\s+$', '', 'm')"/>
     </xsl:when>
   </xsl:choose>
+</xsl:template>
+
+<xsl:template name="process.info.block">
+  <xsl:param name="infoblock"/>
+  <xsl:if test="$infoblock//author">
+    <xsl:variable name="auinfo_attr_block">
+      <xsl:text>[</xsl:text>
+      <xsl:for-each select="$infoblock//author[position() &lt; 4]">
+	<xsl:variable name="au-position">
+	  <xsl:choose>
+	    <xsl:when test="position() = 1"/>
+	    <xsl:otherwise><xsl:value-of select="position()"/></xsl:otherwise>
+	  </xsl:choose>
+	</xsl:variable>
+	<xsl:variable name="auname">
+	  <xsl:value-of select="*[not(affiliation)]"/>
+	</xsl:variable>
+	<xsl:text>au</xsl:text>
+	<xsl:value-of select="$au-position"/>
+	<xsl:text>="</xsl:text>
+	<xsl:value-of select="$auname"/>
+	<xsl:text>", </xsl:text>
+	<xsl:if test="affiliation">
+	  <xsl:text>au</xsl:text>
+	  <xsl:value-of select="$au-position"/>
+	  <xsl:text>affil="</xsl:text>
+	  <xsl:value-of select="affiliation"/>
+	  <xsl:text>", </xsl:text>
+	</xsl:if>
+      </xsl:for-each>
+      <xsl:text>]</xsl:text>
+    </xsl:variable>
+    <!-- Strip any trailing comma or space from end of block -->
+    <xsl:value-of select="replace($auinfo_attr_block, ',? \]$', ']')"/>
+  </xsl:if>
 </xsl:template>
 
 <xsl:template name="process-id">
