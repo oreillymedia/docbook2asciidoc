@@ -5,7 +5,6 @@
  exclude-result-prefixes="util"
  >
 
-
 <!-- Mapping to allow use of XML reserved chars in AsciiDoc markup elements, e.g., angle brackets for cross-references --> 
 <xsl:character-map name="xml-reserved-chars">
   <xsl:output-character character="&#xE801;" string="&lt;"/>
@@ -19,6 +18,8 @@
 <xsl:output method="xml" omit-xml-declaration="yes" use-character-maps="xml-reserved-chars"/>
 <xsl:param name="chunk-output">false</xsl:param>
 <xsl:param name="bookinfo-doc-name">book-docinfo.xml</xsl:param>
+<xsl:param name="strip-indexterms">false</xsl:param>
+<xsl:param name="glossary-passthrough">false</xsl:param>
 
 <xsl:preserve-space elements="*"/>
 <xsl:strip-space elements="table row entry tgroup thead"/>
@@ -45,6 +46,13 @@
 <xsl:template match="//comment()">
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy/>
+++++++++++++++++++++++++++++++++++++++
+    
+</xsl:template>
+  
+<xsl:template match="remark">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
     
 </xsl:template>
@@ -269,10 +277,62 @@
 ++++++++++++++++++++++++++++++++++++++
 </xsl:template>
 
+<!-- Begin handling for glossary -->
+<xsl:template match="glossary">
+  <xsl:choose>
+    <xsl:when test="$glossary-passthrough != 'false'">
+<xsl:call-template name="process-id"/>
+<xsl:text>== Glossary
+      
+[glossary]</xsl:text>
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="*[not(local-name() = 'title')]"/>
+++++++++++++++++++++++++++++++++++++++
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:call-template name="process-id"/>== <xsl:value-of select="title"/><xsl:value-of select="util:carriage-returns(2)"/>[glossary]<xsl:value-of select="util:carriage-returns(1)"/><xsl:apply-templates select="*[not(self::title)]"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+  
+<xsl:template match="glossentry">
+  <xsl:call-template name="process-id"/>
+  <xsl:apply-templates select="glossterm"/><xsl:text>::&#10;</xsl:text><xsl:text>   </xsl:text><xsl:apply-templates select="glossdef"/>
+</xsl:template>
+
+<!-- Output glossary "See Also"s as hardcoded text. Asc to DB toolchain does not 
+    currently retain any @id attrbutes for glossentry elements. -->
+<xsl:template match="glossseealso">
+  <xsl:choose>
+    <xsl:when test="preceding-sibling::para">
+      <xsl:text>+&#10;See Also </xsl:text><xsl:value-of select="id(@otherterm)/glossterm" /><xsl:value-of select="util:carriage-returns(2)"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text>See Also </xsl:text><xsl:value-of select="id(@otherterm)/glossterm" /><xsl:value-of select="util:carriage-returns(2)"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+<!-- End handling for glossary -->
+  
+<xsl:template match="colophon">
+<xsl:call-template name="process-id"/>
+== <xsl:value-of select="title"/>
+<xsl:value-of select="util:carriage-returns(2)"/>
+<xsl:apply-templates select="*[not(self::title)]"/>
+</xsl:template>
+
 <xsl:template match="para|simpara">
 <xsl:call-template name="process-id"/>
 <xsl:apply-templates select="node()"/>
-<xsl:value-of select="util:carriage-returns(2)"/>
+<xsl:choose>
+  <xsl:when test="following-sibling::glossseealso">
+    <xsl:value-of select="util:carriage-returns(1)"/>
+  </xsl:when>
+  <xsl:when test="parent::glossdef and following-sibling::para">
+    <xsl:text>&#10;+&#10;</xsl:text>
+  </xsl:when>
+  <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+</xsl:choose>
 </xsl:template>
 
 <xsl:template match="formalpara">
