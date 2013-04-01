@@ -153,7 +153,86 @@
     <xsl:apply-templates select="." mode="#default"/>
   </xsl:result-document>
 </xsl:template>
-<xsl:template match="indexterm" />
+
+<!-- BEGIN INDEX HANDLING --> 
+  <!-- If keeping index, create index.asciidoc file, add include to book.asciidoc file -->
+  <xsl:template match="index" mode="chunk">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise>
+        <xsl:value-of select="util:carriage-returns(2)"/>
+        <xsl:text>include::index.asciidoc[]</xsl:text>
+        <xsl:result-document href="index.asciidoc">
+          <xsl:apply-templates select="." mode="#default"/>
+        </xsl:result-document>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <!-- If keeping index, output heading markup in otherwise blank index file -->
+  <xsl:template match="index">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise>
+        <xsl:text>== Index</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <!-- Handling for in-text index markup -->
+  <xsl:template match="indexterm">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates select="*"/><xsl:text>)))</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm[@class='startofrange']">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates select="*"/><xsl:text>, id="</xsl:text><xsl:value-of select="@id"/><xsl:text>", range="startofrange")))</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm[primary[@sortas]]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates select="*"/><xsl:text>, sortas="</xsl:text><xsl:value-of select="primary/@sortas"/><xsl:text>")))</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm[@class='endofrange']">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>(((range="endofrange", startref="</xsl:text><xsl:value-of select="@startref"/><xsl:text>)))</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/primary">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>"</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/secondary">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>, "</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/tertiary">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>, "</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/see">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>, see="</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/seealso">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>, seealso="</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+<!-- END INDEX HANDLING -->
 
 <xsl:template match="para/text()">
 <xsl:value-of select="replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm')"/>
