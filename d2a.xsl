@@ -493,33 +493,115 @@ ____
 <xsl:apply-templates select="node()"/>
 </xsl:template>
 
+<!-- BEGIN INLINE MARKUP HANDLING -->
+  <!-- Some of the inline handling didn't originally have normalize-space(); Look into whether it should be added for those. 
+        (Literal should remain as is)-->
 <xsl:template match="phrase"><xsl:apply-templates /></xsl:template>
 
-<xsl:template match="emphasis [@role='bold']">*<xsl:value-of select="." />*</xsl:template>
+<xsl:template match="emphasis[@role='bold']">*<xsl:apply-templates />*</xsl:template>
 
-<xsl:template match="filename">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+<xsl:template match="filename">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of filename, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="filename/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
-  <xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(.)"/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and not(following-sibling::node()[1][self::indexterm]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and not(following-sibling::node()[1][self::indexterm]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of emphasis, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="emphasis/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
-<xsl:template match="command">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+<xsl:template match="command">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of command, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="command/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
-<xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test="contains(., '+')">$$</xsl:if><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')" /><xsl:if test="contains(., '+')">$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
-
-<xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**</xsl:template>
-
-<xsl:template match="replaceable">_++<xsl:value-of select="normalize-space(.)" />++_</xsl:template>
+<xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test="contains(., '+')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '+')">$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
+  <xsl:template match="literal/text()"><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')"></xsl:value-of></xsl:template>
   
-<xsl:template match="superscript">^<xsl:value-of select="normalize-space(.)" />^</xsl:template>
+<xsl:template match="userinput">**`<xsl:apply-templates />`**</xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of userinput, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="userinput/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
-<xsl:template match="subscript">~<xsl:value-of select="normalize-space(.)" />~</xsl:template>
+<xsl:template match="replaceable">_++<xsl:apply-templates />++_</xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of replaceable, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="replaceable/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
+  
+<xsl:template match="superscript">^<xsl:apply-templates />^</xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of superscript, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="superscript/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
+
+<xsl:template match="subscript">~<xsl:apply-templates />~</xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of subscript, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="subscript/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
 <xsl:template match="ulink">link:$$<xsl:value-of select="@url" />$$[<xsl:apply-templates/>]</xsl:template>
 
-<xsl:template match="email"><xsl:value-of select="normalize-space(.)" /></xsl:template>
+  <xsl:template match="email"><xsl:text>pass:[</xsl:text><xsl:element name="email"><xsl:value-of select="normalize-space(.)"/></xsl:element><xsl:text>]</xsl:text></xsl:template>
 
 <xsl:template match="xref">&#xE801;&#xE801;<xsl:value-of select="@linkend" />&#xE802;&#xE802;</xsl:template>
 
 <xsl:template match="link">&#xE801;&#xE801;<xsl:value-of select="@linkend" />,<xsl:value-of select="."/>&#xE802;&#xE802;</xsl:template>
+<!-- END INLINE MARKUP HANDLING -->
 
 <xsl:template match="variablelist">
 <xsl:call-template name="process-id"/>
