@@ -168,68 +168,75 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <!-- If keeping index, output heading markup in otherwise blank index file -->
+  <!-- If keeping index, output heading markup in index file -->
   <xsl:template match="index">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
+      <!-- Index should be at main level when book has parts. -->
+      <xsl:when test="$strip-indexterms = 'false' and part">
+        <xsl:text>= Index</xsl:text>
+      </xsl:when>
       <xsl:otherwise>
         <xsl:text>== Index</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
   <!-- Handling for in-text index markup -->
-  <xsl:template match="indexterm">
+  <!-- Specific handling for indexterms in emphasis elements, to override emphasis template that was ignoring indexterms -->
+  <xsl:template match="indexterm | indexterm[parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
-      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates select="*"/><xsl:text>)))</xsl:text></xsl:otherwise>
+      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates/><xsl:text>)))</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <xsl:template match="indexterm[@class='startofrange']">
+  <xsl:template match="indexterm[@class='startofrange'] | indexterm[@class='startofrange'][parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
-      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates select="*"/><xsl:text>, id="</xsl:text><xsl:value-of select="@id"/><xsl:text>", range="startofrange")))</xsl:text></xsl:otherwise>
+      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates/><xsl:text>, id="</xsl:text><xsl:value-of select="@id"/><xsl:text>", range="startofrange")))</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <xsl:template match="indexterm[primary[@sortas]]">
+  <xsl:template match="indexterm[primary[@sortas]] | indexterm[primary[@sortas]][parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
-      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates select="*"/><xsl:text>, sortas="</xsl:text><xsl:value-of select="primary/@sortas"/><xsl:text>")))</xsl:text></xsl:otherwise>
+      <!-- Output indexterms with @sortas and both primary and secondary indexterms as docbook passthroughs. Not supported in Asciidoc markup. -->
+      <xsl:when test="$strip-indexterms = 'false' and secondary"><xsl:text>pass:[</xsl:text><xsl:copy-of select="."/><xsl:text>]</xsl:text></xsl:when>
+      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates/><xsl:text>, sortas="</xsl:text><xsl:value-of select="primary/@sortas"/><xsl:text>")))</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <xsl:template match="indexterm[@class='endofrange']">
+  <xsl:template match="indexterm[@class='endofrange'] | indexterm[@class='endofrange'][parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
       <xsl:otherwise><xsl:text>(((range="endofrange", startref="</xsl:text><xsl:value-of select="@startref"/><xsl:text>)))</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <xsl:template match="indexterm/primary">
+  <xsl:template match="indexterm/primary | indexterm/primary[parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
-      <xsl:otherwise><xsl:text>"</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+      <xsl:otherwise><xsl:text>"</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <xsl:template match="indexterm/secondary">
+  <xsl:template match="indexterm/secondary | indexterm/secondary[parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
-      <xsl:otherwise><xsl:text>, "</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+      <xsl:otherwise><xsl:text>, "</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <xsl:template match="indexterm/tertiary">
+  <xsl:template match="indexterm/tertiary | indexterm/tertiary[parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
-      <xsl:otherwise><xsl:text>, "</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+      <xsl:otherwise><xsl:text>, "</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <xsl:template match="indexterm/see">
+  <xsl:template match="indexterm/see | indexterm/see[parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
-      <xsl:otherwise><xsl:text>, see="</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+      <xsl:otherwise><xsl:text>, see="</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <xsl:template match="indexterm/seealso">
+  <xsl:template match="indexterm/seealso | indexterm/seealso[parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
-      <xsl:otherwise><xsl:text>, seealso="</xsl:text><xsl:value-of select="@*|node()"/><xsl:text>"</xsl:text></xsl:otherwise>
+      <xsl:otherwise><xsl:text>, seealso="</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 <!-- END INDEX HANDLING -->
@@ -492,7 +499,7 @@ ____
 
 <xsl:template match="filename">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
-  <xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(.)" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and not(following-sibling::node()[1][self::indexterm]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(.)"/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and not(following-sibling::node()[1][self::indexterm]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
 <xsl:template match="command">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
 
@@ -632,6 +639,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:copy-of select="following-sibling::*[1][self::calloutlist]"/>
 </xsl:if>
 ++++++++++++++++++++++++++++++++++++++
+
 </xsl:template>
   
 <!-- Repress callout text from appearing as duplicate text outside of the programlisting passthrough -->
