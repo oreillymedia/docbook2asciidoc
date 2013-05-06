@@ -173,7 +173,7 @@
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
       <!-- Index should be at main level when book has parts. -->
-      <xsl:when test="$strip-indexterms = 'false' and part">
+      <xsl:when test="$strip-indexterms= 'false' and preceding::part">
         <xsl:text>= Index</xsl:text>
       </xsl:when>
       <xsl:otherwise>
@@ -494,8 +494,6 @@ ____
 </xsl:template>
 
 <!-- BEGIN INLINE MARKUP HANDLING -->
-  <!-- Some of the inline handling didn't originally have normalize-space(); Look into whether it should be added for those. 
-        (Literal should remain as is)-->
 <xsl:template match="phrase"><xsl:apply-templates /></xsl:template>
 
 <xsl:template match="emphasis[@role='bold']">*<xsl:apply-templates />*</xsl:template>
@@ -660,6 +658,12 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:call-template name="process-id"/>
 <xsl:apply-templates select="." mode="title"/>
 ====<xsl:apply-templates select="programlisting|screen"/>====
+</xsl:template>
+  
+<xsl:template match="literallayout">
+....
+<xsl:apply-templates/>
+....
 </xsl:template>
 
 <!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
