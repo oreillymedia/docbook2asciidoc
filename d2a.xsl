@@ -153,7 +153,93 @@
     <xsl:apply-templates select="." mode="#default"/>
   </xsl:result-document>
 </xsl:template>
-<xsl:template match="indexterm" />
+
+<!-- BEGIN INDEX HANDLING --> 
+  <!-- If keeping index, create index.asciidoc file, add include to book.asciidoc file -->
+  <xsl:template match="index" mode="chunk">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise>
+        <xsl:value-of select="util:carriage-returns(2)"/>
+        <xsl:text>include::index.asciidoc[]</xsl:text>
+        <xsl:result-document href="index.asciidoc">
+          <xsl:apply-templates select="." mode="#default"/>
+        </xsl:result-document>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <!-- If keeping index, output heading markup in index file -->
+  <xsl:template match="index">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <!-- Index should be at main level when book has parts. -->
+      <xsl:when test="$strip-indexterms= 'false' and preceding::part">
+        <xsl:text>= Index</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>== Index</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <!-- Handling for in-text index markup -->
+  <!-- Specific handling for indexterms in emphasis elements, to override emphasis template that was ignoring indexterms -->
+  <xsl:template match="indexterm | indexterm[parent::emphasis]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates/><xsl:text>)))</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm[@class='startofrange'] | indexterm[@class='startofrange'][parent::emphasis]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates/><xsl:text>, id="</xsl:text><xsl:value-of select="@id"/><xsl:text>", range="startofrange")))</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm[primary[@sortas]] | indexterm[primary[@sortas]][parent::emphasis]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <!-- Output indexterms with @sortas and both primary and secondary indexterms as docbook passthroughs. Not supported in Asciidoc markup. -->
+      <xsl:when test="$strip-indexterms = 'false' and secondary"><xsl:text>pass:[</xsl:text><xsl:copy-of select="."/><xsl:text>]</xsl:text></xsl:when>
+      <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates/><xsl:text>, sortas="</xsl:text><xsl:value-of select="primary/@sortas"/><xsl:text>")))</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm[@class='endofrange'] | indexterm[@class='endofrange'][parent::emphasis]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>(((range="endofrange", startref="</xsl:text><xsl:value-of select="@startref"/><xsl:text>)))</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/primary | indexterm/primary[parent::emphasis]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>"</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/secondary | indexterm/secondary[parent::emphasis]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>, "</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/tertiary | indexterm/tertiary[parent::emphasis]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>, "</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/see | indexterm/see[parent::emphasis]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>, see="</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="indexterm/seealso | indexterm/seealso[parent::emphasis]">
+    <xsl:choose>
+      <xsl:when test="$strip-indexterms = 'true'"/>
+      <xsl:otherwise><xsl:text>, seealso="</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+<!-- END INDEX HANDLING -->
 
 <xsl:template match="para/text()">
 <xsl:value-of select="replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm')"/>
@@ -272,6 +358,13 @@
 
 <!-- Use passthrough for sect4 and sect5, as there is no AsciiDoc markup/formatting for these -->
 <xsl:template match="sect4|sect5">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+</xsl:template>
+  
+<!-- Use passthrough for bibliography -->
+<xsl:template match="bibliography">
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
@@ -407,33 +500,113 @@ ____
 <xsl:apply-templates select="node()"/>
 </xsl:template>
 
+<!-- BEGIN INLINE MARKUP HANDLING -->
 <xsl:template match="phrase"><xsl:apply-templates /></xsl:template>
 
-<xsl:template match="emphasis [@role='bold']">*<xsl:value-of select="." />*</xsl:template>
+<xsl:template match="emphasis[@role='bold']">*<xsl:apply-templates />*</xsl:template>
 
-<xsl:template match="filename">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+<xsl:template match="filename">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of filename, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="filename/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
-  <xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(.)" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and not(following-sibling::node()[1][self::indexterm]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <xsl:template match="emphasis">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and not(following-sibling::node()[1][self::indexterm]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of emphasis, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="emphasis/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
-<xsl:template match="command">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))" /><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+<xsl:template match="command">_<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>_<xsl:if test="not(following-sibling::node()[1][self::userinput]) and matches(following-sibling::node()[1], '^[a-zA-Z]')"><xsl:text> </xsl:text></xsl:if></xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of command, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="command/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(replace(., '([\+])', '\\$1', 'm'))"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
-<xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test="contains(., '+')">$$</xsl:if><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')" /><xsl:if test="contains(., '+')">$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
-
-<xsl:template match="userinput">**`<xsl:value-of select="normalize-space(.)" />`**</xsl:template>
-
-<xsl:template match="replaceable">_++<xsl:value-of select="normalize-space(.)" />++_</xsl:template>
+  <xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test='contains(., "+") or contains(., "&apos;")'>$$</xsl:if><xsl:apply-templates/><xsl:if test='contains(., "+") or contains(., "&apos;")'>$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
+  <xsl:template match="literal/text()"><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')"></xsl:value-of></xsl:template>
   
-<xsl:template match="superscript">^<xsl:value-of select="normalize-space(.)" />^</xsl:template>
+<xsl:template match="userinput">**`<xsl:apply-templates />`**</xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of userinput, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="userinput/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
-<xsl:template match="subscript">~<xsl:value-of select="normalize-space(.)" />~</xsl:template>
+<xsl:template match="replaceable">_++<xsl:apply-templates />++_</xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of replaceable, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="replaceable/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
+  
+<xsl:template match="superscript">^<xsl:apply-templates />^</xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of superscript, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="superscript/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
+
+<xsl:template match="subscript">~<xsl:apply-templates />~</xsl:template>
+  <!-- Normalize-space() on text node below includes extra handling for child elements of subscript, to add needed spaces back
+        in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
+  <xsl:template match="subscript/text()">
+    <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+    <xsl:value-of select="normalize-space(.)"/>
+    <xsl:if test="following-sibling::* and (substring(.,string-length(.))=' ' or substring(.,string-length(.))='&#10;')">
+      <xsl:text> </xsl:text>
+    </xsl:if>
+  </xsl:template>
 
 <xsl:template match="ulink">link:$$<xsl:value-of select="@url" />$$[<xsl:apply-templates/>]</xsl:template>
 
-<xsl:template match="email"><xsl:value-of select="normalize-space(.)" /></xsl:template>
+  <xsl:template match="email"><xsl:text>pass:[</xsl:text><xsl:element name="email"><xsl:value-of select="normalize-space(.)"/></xsl:element><xsl:text>]</xsl:text></xsl:template>
 
 <xsl:template match="xref">&#xE801;&#xE801;<xsl:value-of select="@linkend" />&#xE802;&#xE802;</xsl:template>
 
 <xsl:template match="link">&#xE801;&#xE801;<xsl:value-of select="@linkend" />,<xsl:value-of select="."/>&#xE802;&#xE802;</xsl:template>
+<!-- END INLINE MARKUP HANDLING -->
 
 <xsl:template match="variablelist">
 <xsl:call-template name="process-id"/>
@@ -492,6 +665,12 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:call-template name="process-id"/>
 <xsl:apply-templates select="." mode="title"/>
 ====<xsl:apply-templates select="programlisting|screen"/>====
+</xsl:template>
+  
+<xsl:template match="literallayout">
+....
+<xsl:apply-templates/>
+....
 </xsl:template>
 
 <!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
@@ -553,6 +732,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:copy-of select="following-sibling::*[1][self::calloutlist]"/>
 </xsl:if>
 ++++++++++++++++++++++++++++++++++++++
+
 </xsl:template>
   
 <!-- Repress callout text from appearing as duplicate text outside of the programlisting passthrough -->
