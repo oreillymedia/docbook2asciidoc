@@ -362,6 +362,13 @@
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 </xsl:template>
+  
+<!-- Use passthrough for bibliography -->
+<xsl:template match="bibliography">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+</xsl:template>
 
 <!-- Begin handling for glossary -->
 <xsl:template match="glossary">
@@ -537,7 +544,7 @@ ____
     </xsl:if>
   </xsl:template>
 
-<xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test="contains(., '+')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '+')">$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
+  <xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if>+<xsl:if test='contains(., "+") or contains(., "&apos;")'>$$</xsl:if><xsl:apply-templates/><xsl:if test='contains(., "+") or contains(., "&apos;")'>$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or substring(following-sibling::node()[1],1,1) = 's' or substring(following-sibling::node()[1],1,1) = '’'">+</xsl:if></xsl:template>
   <xsl:template match="literal/text()"><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')"></xsl:value-of></xsl:template>
   
 <xsl:template match="userinput">**`<xsl:apply-templates />`**</xsl:template>
