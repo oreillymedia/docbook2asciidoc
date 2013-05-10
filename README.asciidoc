@@ -27,10 +27,15 @@ java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl chunk-output=true bookinf
 
 Default value of "bookinfo-doc-name" is "book-docinfo.xml"
 
-If you'd like the Glossary element to be output inside a DocBook passthrough, instead of Asciidoc markup, add the parameter +glossary-passthrough=true+:
+=== Other Parameter Options:
 
+* If you'd like the Glossary element to be output inside a DocBook passthrough, instead of Asciidoc markup, add the parameter +glossary-passthrough=true+:
 ----
 java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl glossary-passthrough=true
+----
+* If you'd like to strip out the indexterm elements, use the parameter +strip-indexterms=true+:
+----
+java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl strip-indexterms=true
 ----
 
 == Example
