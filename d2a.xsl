@@ -409,11 +409,18 @@
   
 <xsl:template match="colophon">
 <xsl:call-template name="process-id"/>
-== <xsl:value-of select="title"/>
+  <xsl:choose>
+    <xsl:when test="preceding::part">
+      <xsl:text>= </xsl:text><xsl:value-of select="title"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text>== </xsl:text><xsl:value-of select="title"/>
+    </xsl:otherwise>
+  </xsl:choose>
 <xsl:value-of select="util:carriage-returns(2)"/>
 <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
-
+  
 <xsl:template match="para|simpara">
 <xsl:call-template name="process-id"/>
 <xsl:apply-templates select="node()"/>
