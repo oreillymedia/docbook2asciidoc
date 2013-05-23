@@ -421,6 +421,15 @@
 <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
   
+  <xsl:template match="dedication">
+    <xsl:call-template name="process-id"/>
+    <xsl:text>[dedication]</xsl:text>
+    <xsl:value-of select="util:carriage-returns(1)"/>
+    <xsl:text>== Dedication</xsl:text>
+    <xsl:value-of select="util:carriage-returns(2)"/>
+    <xsl:apply-templates select="node()[not(self::title)]"/>
+  </xsl:template>
+  
 <xsl:template match="para|simpara">
 <xsl:call-template name="process-id"/>
 <xsl:apply-templates select="node()"/>
