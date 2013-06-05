@@ -432,6 +432,7 @@
   
 <xsl:template match="para|simpara">
 <xsl:call-template name="process-id"/>
+<xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/></xsl:if>
 <xsl:apply-templates select="node()"/>
 <xsl:choose>
   <xsl:when test="following-sibling::glossseealso">
@@ -439,6 +440,9 @@
   </xsl:when>
   <xsl:when test="parent::glossdef and following-sibling::para">
     <xsl:text>&#10;+&#10;</xsl:text>
+  </xsl:when>
+  <xsl:when test="ancestor::listitem and following-sibling::element()">
+    <xsl:value-of select="util:carriage-returns(1)"/>
   </xsl:when>
   <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
 </xsl:choose>
@@ -684,7 +688,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 <!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
 <xsl:template match="programlisting|screen">
-<xsl:value-of select="util:carriage-returns(1)"/>
+<xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/></xsl:if>
 <!-- Preserve non-empty "language" attribute if present -->
 <xsl:if test="@language != ''">
   <xsl:text>[source, </xsl:text>
@@ -703,7 +707,10 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     <xsl:value-of select="." disable-output-escaping="yes"/>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>....</xsl:text>
-    <xsl:value-of select="util:carriage-returns(2)"/>
+    <xsl:choose>
+      <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+    </xsl:choose>
   </xsl:when>
   <xsl:otherwise>
     <xsl:text>----</xsl:text>
@@ -712,7 +719,10 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
     <xsl:value-of select="." disable-output-escaping="yes"/>
     <xsl:value-of select="util:carriage-returns(1)"/>
     <xsl:text>----</xsl:text>
-    <xsl:value-of select="util:carriage-returns(2)"/>
+    <xsl:choose>
+      <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+</xsl:choose>
   </xsl:otherwise>
 </xsl:choose>
 <xsl:if test="following-sibling::*[1][self::calloutlist]">
@@ -733,7 +743,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 <!-- Passthrough for code listings that have child elements (inlines) -->
 <xsl:template match="programlisting[*]|screen[*]">
-++++++++++++++++++++++++++++++++++++++
+<xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/></xsl:if>++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 
   <!-- Passthrough for related calloutlist -->
