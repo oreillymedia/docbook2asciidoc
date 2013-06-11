@@ -189,20 +189,24 @@
       <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates/><xsl:text>)))</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+  
   <xsl:template match="indexterm[@class='startofrange'][not(*/@sortas)] | indexterm[@class='startofrange'][parent::emphasis][not(*/@sortas)]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
       <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates/><xsl:text>, id="</xsl:text><xsl:value-of select="@id"/><xsl:text>", range="startofrange")))</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <xsl:template match="indexterm[primary[@sortas]][not(*/@sortas)] | indexterm[primary[@sortas]][parent::emphasis][not(*/@sortas)]">
+  
+  <xsl:template match="indexterm[*/@sortas][not(@class='startofrange')] | indexterm[*/@sortas][parent::emphasis][not(@class='startofrange')]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
       <!-- Output indexterms with @sortas and both primary and secondary indexterms as docbook passthroughs. Not supported in Asciidoc markup. -->
       <xsl:when test="$strip-indexterms = 'false' and secondary"><xsl:text>pass:[</xsl:text><xsl:copy-of select="."/><xsl:text>]</xsl:text></xsl:when>
+      <!-- When only primary term exists, output as asciidoc -->
       <xsl:otherwise><xsl:text>(((</xsl:text><xsl:apply-templates/><xsl:text>, sortas="</xsl:text><xsl:value-of select="primary/@sortas"/><xsl:text>")))</xsl:text></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+  
   <!-- Output indexterms with both @sortas and @startofrange as docbook passthroughs. Not supported in Asciidoc markup. -->
   <xsl:template match="indexterm[@class='startofrange' and */@sortas]">
     <xsl:choose>
@@ -210,6 +214,7 @@
       <xsl:otherwise><xsl:text>pass:[</xsl:text><xsl:copy-of select="."/><xsl:text>]</xsl:text></xsl:otherwise>
     </xsl:choose>  
   </xsl:template>
+  
   <xsl:template match="indexterm[@class='endofrange'] | indexterm[@class='endofrange'][parent::emphasis]">
     <xsl:choose>
       <xsl:when test="$strip-indexterms = 'true'"/>
