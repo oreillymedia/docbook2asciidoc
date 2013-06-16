@@ -700,6 +700,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 
 <!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
 <xsl:template match="programlisting|screen">
+<xsl:value-of select="util:carriage-returns(1)"/>
 <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/></xsl:if>
 <!-- Preserve non-empty "language" attribute if present -->
 <xsl:if test="@language != ''">
