@@ -637,7 +637,11 @@ ____
   <xsl:choose>
     <!-- When variablelist has a varlistentry with more than one term, output as passthrough -->
     <xsl:when test="varlistentry/term[2]">
+      <xsl:text>++++
+</xsl:text>
       <xsl:copy-of select="."/>
+      <xsl:text>
+++++</xsl:text>
       <xsl:value-of select="util:carriage-returns(2)"/>
     </xsl:when>
    <xsl:otherwise>
