@@ -634,10 +634,19 @@ ____
 <!-- END INLINE MARKUP HANDLING -->
 
 <xsl:template match="variablelist">
-<xsl:call-template name="process-id"/>
-<xsl:for-each select="varlistentry">
-<xsl:apply-templates select="term,listitem"/>
-</xsl:for-each>
+  <xsl:choose>
+    <!-- When variablelist has a varlistentry with more than one term, output as passthrough -->
+    <xsl:when test="varlistentry/term[2]">
+      <xsl:copy-of select="."/>
+      <xsl:value-of select="util:carriage-returns(2)"/>
+    </xsl:when>
+   <xsl:otherwise>
+     <xsl:call-template name="process-id"/>
+     <xsl:for-each select="varlistentry">
+       <xsl:apply-templates select="term,listitem"/>
+     </xsl:for-each>
+   </xsl:otherwise>
+  </xsl:choose>
 </xsl:template>
 
 <xsl:template match="itemizedlist">
