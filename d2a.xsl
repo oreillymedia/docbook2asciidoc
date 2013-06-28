@@ -410,7 +410,10 @@
 <xsl:template match="glossseealso">
   <xsl:choose>
     <xsl:when test="preceding-sibling::para">
-      <xsl:text>+&#10;See Also </xsl:text><xsl:value-of select="id(@otherterm)/glossterm" /><xsl:value-of select="util:carriage-returns(2)"/>
+      <xsl:text>+&#10;See Also </xsl:text><xsl:value-of select="id(@otherterm)/glossterm" /><xsl:choose>
+        <xsl:when test="following-sibling::glossseealso"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+      </xsl:choose>
     </xsl:when>
     <xsl:otherwise>
       <xsl:text>See Also </xsl:text><xsl:value-of select="id(@otherterm)/glossterm" /><xsl:value-of select="util:carriage-returns(2)"/>
