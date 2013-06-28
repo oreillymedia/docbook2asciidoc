@@ -426,14 +426,18 @@
 <xsl:call-template name="process-id"/>
   <xsl:choose>
     <xsl:when test="preceding::part">
-      <xsl:text>= </xsl:text><xsl:value-of select="title"/>
+      <xsl:text>= Colophon</xsl:text>
     </xsl:when>
     <xsl:otherwise>
-      <xsl:text>== </xsl:text><xsl:value-of select="title"/>
+      <xsl:text>== Colophon</xsl:text>
     </xsl:otherwise>
   </xsl:choose>
 <xsl:value-of select="util:carriage-returns(2)"/>
-<xsl:apply-templates select="*[not(self::title)]"/>
+  <xsl:choose>
+    <xsl:when test="para/text()"><xsl:apply-templates select="*[not(self::title)]"/></xsl:when>
+    <xsl:otherwise><xsl:text>[FILL IN]</xsl:text></xsl:otherwise>
+  </xsl:choose>
+  
 </xsl:template>
   
   <xsl:template match="dedication">
