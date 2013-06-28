@@ -451,14 +451,18 @@
   
 <xsl:template match="para|simpara">
 <xsl:call-template name="process-id"/>
-<xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/></xsl:if>
+  <!-- If it's the 2nd+ para inside a listitem or glossdef, precede it with a plus symbol -->
+<xsl:if test="ancestor::listitem and preceding-sibling::element()">
+  <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
+</xsl:if>
+<xsl:if test="ancestor::glossdef and preceding-sibling::element()">
+  <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
+</xsl:if>
 <xsl:apply-templates select="node()"/>
+  <!-- Control number of blank lines following para, if it's inside a listitem or glossary -->
 <xsl:choose>
   <xsl:when test="following-sibling::glossseealso">
     <xsl:value-of select="util:carriage-returns(1)"/>
-  </xsl:when>
-  <xsl:when test="parent::glossdef and following-sibling::para">
-    <xsl:text>&#10;+&#10;</xsl:text>
   </xsl:when>
   <xsl:when test="ancestor::listitem and following-sibling::element()">
     <xsl:value-of select="util:carriage-returns(1)"/>
@@ -691,10 +695,16 @@ ____
 </xsl:template>
 
 <xsl:template match="figure">
+<xsl:if test="ancestor::listitem and preceding-sibling::element()">
+  <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
+</xsl:if>
 <xsl:call-template name="process-id"/>
-.<xsl:apply-templates select="title"/>
+<xsl:text>.</xsl:text><xsl:apply-templates select="title"/>
 image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fileref"/>[]
-<xsl:value-of select="util:carriage-returns(1)"/>
+<xsl:choose>
+  <xsl:when test="ancestor::listitem and following-sibling::element()"/>
+  <xsl:otherwise><xsl:value-of select="util:carriage-returns(1)"/></xsl:otherwise>
+</xsl:choose>
 </xsl:template>
 
 <xsl:template match="informalfigure">
