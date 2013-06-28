@@ -435,7 +435,7 @@
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:choose>
     <xsl:when test="para/text()"><xsl:apply-templates select="*[not(self::title)]"/></xsl:when>
-    <xsl:otherwise><xsl:text>[FILL IN]</xsl:text></xsl:otherwise>
+    <xsl:otherwise><xsl:text>(FILL IN)</xsl:text></xsl:otherwise>
   </xsl:choose>
   
 </xsl:template>
