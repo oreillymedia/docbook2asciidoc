@@ -584,7 +584,7 @@ ____
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or preceding-sibling::text()[matches(., '\S$')] or (following-sibling::text()[1][matches(., '^\S.*?') and not(matches(., '^\..*?')) and not(matches(., '^,.*?'))])">+</xsl:if>+<xsl:if test='contains(., "+") or contains(., "&apos;") or contains(., "_")'>$$</xsl:if><xsl:apply-templates/><xsl:if test='contains(., "+") or contains(., "&apos;") or contains(., "_")'>$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::emphasis] or preceding-sibling::text()[matches(., '\S$')] or (following-sibling::text()[1][matches(., '^\S.*?') and not(matches(., '^\..*?')) and not(matches(., '^,.*?'))])">+</xsl:if></xsl:template>
+  <xsl:template match="literal"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or child::replaceable or following-sibling::node()[1][self::emphasis] or preceding-sibling::text()[matches(., '\S$')] or (following-sibling::text()[1][matches(., '^\S.*?') and not(matches(., '^\..*?')) and not(matches(., '^,.*?'))])">+</xsl:if>+<xsl:if test='contains(., "+") or contains(., "&apos;") or contains(., "_")'>$$</xsl:if><xsl:apply-templates/><xsl:if test='contains(., "+") or contains(., "&apos;") or contains(., "_")'>$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or child::replaceable or following-sibling::node()[1][self::emphasis] or preceding-sibling::text()[matches(., '\S$')] or (following-sibling::text()[1][matches(., '^\S.*?') and not(matches(., '^\..*?')) and not(matches(., '^,.*?'))])">+</xsl:if></xsl:template>
   <xsl:template match="literal/text()"><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')"></xsl:value-of></xsl:template>
   
 <xsl:template match="userinput">**`<xsl:apply-templates />`**</xsl:template>
@@ -599,7 +599,10 @@ ____
     </xsl:if>
   </xsl:template>
 
-<xsl:template match="replaceable">_++<xsl:apply-templates />++_</xsl:template>
+<xsl:template match="replaceable"><xsl:choose>
+  <xsl:when test="parent::literal">__<xsl:apply-templates />__</xsl:when>
+  <xsl:otherwise>_++<xsl:apply-templates />++_</xsl:otherwise>
+</xsl:choose></xsl:template>
   <!-- Normalize-space() on text node below includes extra handling for child elements of replaceable, to add needed spaces back in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
   <xsl:template match="replaceable/text()">
     <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
