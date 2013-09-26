@@ -348,6 +348,11 @@
 </xsl:template>
 
 <xsl:template match="sect1">
+  <!-- If sect1 title is "References," override special Asciidoc section macro -->
+<xsl:if test="title = 'References'">
+  <xsl:text>[sect2]</xsl:text>
+  <xsl:value-of select="util:carriage-returns(1)"/>
+</xsl:if>
 <xsl:call-template name="process-id"/>
 === <xsl:apply-templates select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
