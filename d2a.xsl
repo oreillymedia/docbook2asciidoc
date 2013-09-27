@@ -654,9 +654,10 @@ ____
 
 <xsl:template match="variablelist">
   <xsl:choose>
-    <!-- When variablelist has a varlistentry with more than one term, output as passthrough -->
-    <xsl:when test="varlistentry/term[2]">
-      <xsl:text>++++
+    <!-- When variablelist has a varlistentry with more than one term, or a nested variablelist, output as passthrough -->
+    <xsl:when test="varlistentry/term[2] | //variablelist">
+      <xsl:text>
+++++
 </xsl:text>
       <xsl:copy-of select="."/>
       <xsl:text>
