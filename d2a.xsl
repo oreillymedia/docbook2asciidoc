@@ -4,7 +4,7 @@
  xmlns:util="http://github.com/oreillymedia/docbook2asciidoc/"
  exclude-result-prefixes="util"
  >
-
+  
 <!-- Mapping to allow use of XML reserved chars in AsciiDoc markup elements, e.g., angle brackets for cross-references --> 
 <xsl:character-map name="xml-reserved-chars">
   <xsl:output-character character="&#xE801;" string="&lt;"/>
@@ -44,6 +44,7 @@
 </xsl:template>
   
 <xsl:template match="//comment()">
+
 ++++++++++++++++++++++++++++++++++++++
 <xsl:copy/>
 ++++++++++++++++++++++++++++++++++++++
@@ -256,6 +257,12 @@
 <xsl:template match="para/text()">
 <xsl:value-of select="replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm')"/>
 </xsl:template>
+  
+<!-- Special handling for text inside code block that will be converted as Asciidoc, 
+      to make sure special characters are not escaped. -->
+<xsl:template match="text()" mode="code">
+  <xsl:value-of select="." disable-output-escaping="yes"></xsl:value-of>
+</xsl:template>
 
 <xsl:template match="phrase/text()"><xsl:text/><xsl:value-of select="replace(., '\n\s+', ' ', 'm')"/><xsl:text/></xsl:template>
 
@@ -455,12 +462,20 @@
   </xsl:template>
   
 <xsl:template match="para|simpara">
-<xsl:call-template name="process-id"/>
-  <!-- If it's the 2nd+ para inside a listitem or glossdef, precede it with a plus symbol -->
+  <xsl:choose>
+    <xsl:when test="ancestor::callout"/>
+    <xsl:otherwise>
+      <xsl:call-template name="process-id"/>
+    </xsl:otherwise>
+  </xsl:choose>
+  <!-- If it's the 2nd+ para inside a listitem, glossdef, or callout, precede it with a plus symbol -->
 <xsl:if test="ancestor::listitem and preceding-sibling::element()">
   <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
 </xsl:if>
 <xsl:if test="ancestor::glossdef and preceding-sibling::element()">
+  <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
+</xsl:if>
+<xsl:if test="ancestor::callout and preceding-sibling::element()">
   <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
 </xsl:if>
 <xsl:apply-templates select="node()"/>
@@ -724,100 +739,342 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 </xsl:template>
 
 <xsl:template match="inlinemediaobject">image:<xsl:value-of select="imageobject[@role='web']/imagedata/@fileref"/>[]</xsl:template>
-
-<xsl:template match="example">
-<xsl:call-template name="process-id"/>
-<xsl:apply-templates select="." mode="title"/>
-====<xsl:apply-templates select="programlisting|screen"/>====
-</xsl:template>
   
 <xsl:template match="literallayout">
-....
-<xsl:apply-templates/>
-....
+  ....
+  <xsl:apply-templates/>
+  ....
 </xsl:template>
 
-<!-- Asciidoc-formatted programlisting|screen (don't contain child elements) -->
-<xsl:template match="programlisting|screen">
-<xsl:value-of select="util:carriage-returns(1)"/>
-<xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/></xsl:if>
+
+<!-- BEGIN CODE BLOCK HANDLING -->
+
+  <xsl:template match="example">
+    <xsl:choose>
+      <!-- When example code contains callouts -->
+      <xsl:when test="//co">
+        <xsl:choose>
+          <!-- When example code contains other inlines besides callouts output as Docbook passthrough -->
+          <xsl:when test="descendant::*[*[not(self::co)]]">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+            
+          </xsl:when>
+          <!-- When example code is in a different section than corresponding calloutlist
+                          output as Docbook passthrough-->
+          <xsl:when test="parent::node() != */co/id(@linkends)/parent::calloutlist/parent::node()">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+
+</xsl:when>
+          <!-- When example code contains only callout inlines, output as Asciidoc -->
+          <xsl:otherwise>
+            <xsl:call-template name="process-id"/>
+            <xsl:apply-templates select="." mode="title"/>====
 <!-- Preserve non-empty "language" attribute if present -->
 <xsl:if test="@language != ''">
-  <xsl:text>[source, </xsl:text>
-  <xsl:value-of select="@language"/>
-  <xsl:text>]</xsl:text>
-  <xsl:value-of select="util:carriage-returns(1)"/>
-</xsl:if>
-<xsl:choose>
-  <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
-  <xsl:when test="matches(., '----')">
-    <xsl:text>[listing]</xsl:text>
-    <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:text>....</xsl:text>
-    <xsl:value-of select="util:carriage-returns(1)"/>
-    <!-- Disable output escaping on code listing text to avoid any problems with roundtripping lt, gt, and amp chars -->
-    <xsl:value-of select="." disable-output-escaping="yes"/>
-    <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:text>....</xsl:text>
-    <xsl:choose>
-      <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
-      <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+              <xsl:text>[source, </xsl:text>
+              <xsl:value-of select="@language"/>
+              <xsl:text>]</xsl:text>
+              <xsl:value-of select="util:carriage-returns(1)"/>
+            </xsl:if>
+            <xsl:choose>
+              <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
+              <xsl:when test="matches(., '----')">
+                <xsl:text>[listing]</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>....</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <!-- This apply-templates calls on special "code" mode templates for text() and <co> elements.
+          Allows disable-output-escaping to be used on text(), while still using apply-templates to
+          process child <co> elements. -->
+                <xsl:apply-templates mode="code"/>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>....</xsl:text>
+                <xsl:choose>
+                  <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:when>
+              <xsl:otherwise><xsl:text>----</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <!-- This apply-templates calls on special "code" mode templates for text() and <co> elements.
+          Allows disable-output-escaping to be used on text(), while still using apply-templates to
+          process child <co> elements. -->
+                <xsl:apply-templates mode="code"/>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>----</xsl:text>
+                <xsl:choose>
+                  <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:otherwise>
+            </xsl:choose>
+====
+
+</xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <!-- When example code doesn't contain callouts -->
+      <xsl:otherwise>
+        <xsl:choose>
+          <!-- When example code contains inline elements, output as Docbook passthrough -->
+          <xsl:when test="example[descendant::*[*]]">
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+            
+</xsl:when>
+          <!-- Otherwise output as Asciidoc -->
+          <xsl:otherwise>
+            <xsl:call-template name="process-id"/>
+            <xsl:apply-templates select="." mode="title"/>====
+<!-- Preserve non-empty "language" attribute if present -->
+<xsl:if test="@language != ''">
+              <xsl:text>[source, </xsl:text>
+              <xsl:value-of select="@language"/>
+              <xsl:text>]</xsl:text>
+              <xsl:value-of select="util:carriage-returns(1)"/>
+            </xsl:if>
+            <xsl:choose>
+              <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
+              <xsl:when test="matches(., '----')">
+                <xsl:text>[listing]</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>....</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <!-- This apply-templates calls on special "code" mode templates for text() and <co> elements.
+          Allows disable-output-escaping to be used on text(), while still using apply-templates to
+          process child <co> elements. -->
+                <xsl:apply-templates mode="code"/>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>....</xsl:text>
+                <xsl:choose>
+                  <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:when>
+              <xsl:otherwise><xsl:text>----</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <!-- This apply-templates calls on special "code" mode templates for text() and <co> elements.
+          Allows disable-output-escaping to be used on text(), while still using apply-templates to
+          process child <co> elements. -->
+                <xsl:apply-templates mode="code"/>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>----</xsl:text>
+                <xsl:choose>
+                  <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:otherwise>
+            </xsl:choose>
+====
+
+</xsl:otherwise>
+        </xsl:choose>
+      </xsl:otherwise>
     </xsl:choose>
-  </xsl:when>
-  <xsl:otherwise>
-    <xsl:text>----</xsl:text>
-    <xsl:value-of select="util:carriage-returns(1)"/>
-    <!-- Disable output escaping on code listing text to avoid any problems with roundtripping lt, gt, and amp chars -->
-    <xsl:value-of select="." disable-output-escaping="yes"/>
-    <xsl:value-of select="util:carriage-returns(1)"/>
-    <xsl:text>----</xsl:text>
+  </xsl:template>
+
+  <xsl:template match="programlisting | screen">
     <xsl:choose>
-      <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
-      <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
-</xsl:choose>
-  </xsl:otherwise>
-</xsl:choose>
-<xsl:if test="following-sibling::*[1][self::calloutlist]">
-  <xsl:call-template name="calloutlist_ad"/>
-</xsl:if>
-</xsl:template>
-  
-<!-- This template is called for an asciidoc-formatted calloutlist (not docbook passthrough) -->
-<xsl:template name="calloutlist_ad">
-  <xsl:call-template name="process-id"/>
-  <xsl:for-each select="callout">
-    &#xE801;<xsl:value-of select="position()"/>&#xE802; <xsl:apply-templates/>
-  </xsl:for-each>
-  <xsl:if test="calloutlist">
-    <xsl:copy-of select="."/>
-  </xsl:if>
-</xsl:template>
-
-<!-- Passthrough for code listings that have child elements (inlines) -->
-<xsl:template match="programlisting[*]|screen[*]">
-<xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/></xsl:if>++++++++++++++++++++++++++++++++++++++
-<xsl:copy-of select="."/>
-
-  <!-- Passthrough for related calloutlist -->
-<xsl:if test="following-sibling::*[1][self::calloutlist]">
-  <xsl:copy-of select="following-sibling::*[1][self::calloutlist]"/>
-</xsl:if>
-++++++++++++++++++++++++++++++++++++++
-
-</xsl:template>
-  
-<!-- Repress callout text from appearing as duplicate text outside of the programlisting passthrough -->
-<xsl:template match="calloutlist/callout"/>
-
-<!-- Also use passthrough for examples that have code listings with child elements (inlines) -->
-<xsl:template match="example[descendant::programlisting[*]]|example[descendant::screen[*]]">
-++++++++++++++++++++++++++++++++++++++
+      <!-- Contains child <co> elements -->
+      <xsl:when test="co">
+        <xsl:choose>
+          <!-- Use Docbook passthrough when code block contains other child elements besides <co>-->
+          <xsl:when test="*[not(self::co)]">
+            <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
+              <xsl:value-of select="util:carriage-returns(1)"/>
+            </xsl:if>++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
-</xsl:template>
+</xsl:when>
+          <!-- Use Docbook passthrough when corresponding calloutlist isn't in same section -->
+          <xsl:when test="not(self::*/parent::node() = co/id(@linkends)/parent::calloutlist/parent::node())">
+            <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
+              <xsl:value-of select="util:carriage-returns(1)"/>
+            </xsl:if>++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
 
-<xsl:template match="co"><xsl:variable name="curr" select="@id"/>&#xE801;<xsl:value-of select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>&#xE802;</xsl:template>
+</xsl:when>
+          <!-- Otherwise output as Asciidoc -->
+          <xsl:otherwise>
+            <xsl:value-of select="util:carriage-returns(1)"/>
+            <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/></xsl:if>
+            <!-- Preserve non-empty "language" attribute if present -->
+            <xsl:if test="@language != ''">
+              <xsl:text>[source, </xsl:text>
+              <xsl:value-of select="@language"/>
+              <xsl:text>]</xsl:text>
+              <xsl:value-of select="util:carriage-returns(1)"/>
+            </xsl:if>
+            <xsl:choose>
+              <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
+              <xsl:when test="matches(., '----')">
+                <xsl:text>[listing]</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>....</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <!-- This apply-templates calls on special "code" mode templates for text() and <co> elements.
+          Allows disable-output-escaping to be used on text(), while still using apply-templates to
+          process child <co> elements. -->
+                <xsl:apply-templates mode="code"/>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>....</xsl:text>
+                <xsl:choose>
+                  <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:text>----</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <!-- This apply-templates calls on special "code" mode templates for text() and <co> elements.
+          Allows disable-output-escaping to be used on text(), while still using apply-templates to
+          process child <co> elements. -->
+                <xsl:apply-templates mode="code"/>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>----</xsl:text>
+                <xsl:choose>
+                  <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <!-- No child co elements -->
+      <xsl:otherwise>
+        <xsl:choose>
+          <!-- Use Docbook passthrough when code block has inlines -->
+          <xsl:when test="*">
+            <xsl:if test="ancestor::listitem and preceding-sibling::element()">
+              <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
+            </xsl:if>++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+
+</xsl:when>
+          <!-- Output Asciidoc -->
+          <xsl:otherwise>
+            <xsl:value-of select="util:carriage-returns(1)"/>
+            <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/></xsl:if>
+            <!-- Preserve non-empty "language" attribute if present -->
+            <xsl:if test="@language != ''">
+              <xsl:text>[source, </xsl:text>
+              <xsl:value-of select="@language"/>
+              <xsl:text>]</xsl:text>
+              <xsl:value-of select="util:carriage-returns(1)"/>
+            </xsl:if>
+            <xsl:choose>
+              <!-- Must format as a [listing block] for proper AsciiDoc processing, if programlisting text contains 4 hyphens in a row -->
+              <xsl:when test="matches(., '----')">
+                <xsl:text>[listing]</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>....</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <!-- This apply-templates calls on special "code" mode templates for text() and <co> elements.
+          Allows disable-output-escaping to be used on text(), while still using apply-templates to
+          process child <co> elements. -->
+                <xsl:apply-templates mode="code"/>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>....</xsl:text>
+                <xsl:choose>
+                  <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:text>----</xsl:text>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <!-- This apply-templates calls on special "code" mode templates for text() and <co> elements.
+          Allows disable-output-escaping to be used on text(), while still using apply-templates to
+          process child <co> elements. -->
+                <xsl:apply-templates mode="code"/>
+                <xsl:value-of select="util:carriage-returns(1)"/>
+                <xsl:text>----</xsl:text>
+                <xsl:choose>
+                  <xsl:when test="ancestor::listitem and preceding-sibling::element()"><xsl:value-of select="util:carriage-returns(1)"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="util:carriage-returns(2)"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+<!-- <co> element -->
+<xsl:template match="co" mode="code"><xsl:variable name="curr" select="@id"/>&#xE801;<xsl:value-of select="count(//calloutlist/callout[@arearefs=$curr]/preceding-sibling::callout)+1"/>&#xE802;</xsl:template>
+
+  <!-- Calloutlist -->
+  <xsl:template match="calloutlist">
+    <xsl:choose>
+      <!-- Calloutlist points to an example -->
+      <xsl:when test="callout/id(@arearefs)/ancestor::example">
+        <xsl:choose>
+          <!-- When corresponding code block has inlines (besides co) and will be output as Docbook passthrough,
+          also output calloutlist as Docbook passthrough-->
+          <xsl:when test="callout/id(@arearefs)/parent::*[*[not(self::co)]]">++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+
+</xsl:when>
+          <!-- When corresponding code block isn't in same section as calloutlist and will be output as Docbook passthrough,
+          also output calloutlist as Docbook passthrough.-->
+          <xsl:when test="callout/id(@arearefs)/parent::*/parent::example/parent::node() != self::calloutlist/parent::node()">++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+
+</xsl:when>
+          <!-- Otherwise output as Asciidoc -->
+          <xsl:otherwise>
+            <xsl:for-each select="callout">
+&#xE801;<xsl:value-of select="position()"/>&#xE802; <xsl:apply-templates/></xsl:for-each>
+<xsl:if test="calloutlist">
+<xsl:copy-of select="."/>
+</xsl:if>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <!-- Calloutlist points to a regular code block (not example) -->
+      <xsl:otherwise>
+        <xsl:choose>
+          <!-- When corresponding code block has inlines (besides co) and will be output as Docbook passthrough,
+          also output calloutlist as Docbook passthrough-->
+          <xsl:when test="callout/id(@arearefs)/parent::*[*[not(self::co)]]">++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+
+</xsl:when>
+          <!-- When corresponding code block isn't in same section as calloutlist and will be output as Docbook passthrough,
+          also output calloutlist as Docbook passthrough.-->
+          <xsl:when test="callout/id(@arearefs)/parent::*/parent::node() != self::calloutlist/parent::node()">++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+
+</xsl:when>
+          <!-- Otherwise output as Asciidoc -->
+          <xsl:otherwise>
+            <xsl:for-each select="callout">
+&#xE801;<xsl:value-of select="position()"/>&#xE802; <xsl:apply-templates/></xsl:for-each>
+<xsl:if test="calloutlist">
+<xsl:copy-of select="."/>
+</xsl:if>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  
+<!-- END CODE BLOCK HANDLING -->
+  
 
 <xsl:template match="table|informaltable">
 <xsl:call-template name="process-id"/>
