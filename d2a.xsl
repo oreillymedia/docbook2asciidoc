@@ -884,7 +884,7 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
       <xsl:when test="co">
         <xsl:choose>
           <!-- Use Docbook passthrough when code block contains other child elements besides <co>-->
-          <xsl:when test="*[not(self::co)]">
+          <xsl:when test="*[not(self::co) and not(indexterm)]">
             <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
               <xsl:value-of select="util:carriage-returns(1)"/>
             </xsl:if>++++++++++++++++++++++++++++++++++++++
@@ -894,6 +894,15 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 </xsl:when>
           <!-- Use Docbook passthrough when corresponding calloutlist isn't in same section -->
           <xsl:when test="not(self::*/parent::node() = co/id(@linkends)/parent::calloutlist/parent::node())">
+            <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
+              <xsl:value-of select="util:carriage-returns(1)"/>
+            </xsl:if>++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+
+</xsl:when>
+          <!-- Use Docbook passthrough when code block contains indexterms and you want to keep them -->
+          <xsl:when test="indexterm and $strip-indexterms='false'">
             <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
               <xsl:value-of select="util:carriage-returns(1)"/>
             </xsl:if>++++++++++++++++++++++++++++++++++++++
@@ -952,9 +961,18 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
       <xsl:otherwise>
         <xsl:choose>
           <!-- Use Docbook passthrough when code block has inlines -->
-          <xsl:when test="*">
+          <xsl:when test="*[not(self::indexterm)]">
             <xsl:if test="ancestor::listitem and preceding-sibling::element()">
               <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
+            </xsl:if>++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+
+</xsl:when>
+          <!-- Use Docbook passthrough when code block contains indexterms and you want to keep them -->
+          <xsl:when test="indexterm and $strip-indexterms='false'">
+            <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
+              <xsl:value-of select="util:carriage-returns(1)"/>
             </xsl:if>++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
