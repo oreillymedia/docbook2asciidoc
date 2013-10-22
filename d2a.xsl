@@ -20,6 +20,7 @@
 <xsl:param name="bookinfo-doc-name">book-docinfo.xml</xsl:param>
 <xsl:param name="strip-indexterms">false</xsl:param>
 <xsl:param name="glossary-passthrough">false</xsl:param>
+<xsl:param name="add-equation-titles">false</xsl:param>
 
 <xsl:preserve-space elements="*"/>
 <xsl:strip-space elements="table row entry tgroup thead"/>
@@ -744,6 +745,76 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   ....
   <xsl:apply-templates/>
   ....
+</xsl:template>
+
+<!-- BEGIN EQUATION HANDLING -->
+<xsl:template match="equation">
+<xsl:call-template name="process-id"/>
+<xsl:choose>
+  <!-- If nested latex, use the macro -->
+  <xsl:when test="mathphrase[@role='tex']">
+<xsl:text xml:space="preserve">[latexmath]</xsl:text>
+<xsl:choose>
+<!-- Set the below parameter to "true" only for DocBook books that have numbered equations but no titles -->
+<!-- This will pass through a placeholder title -->
+<xsl:when test="$add-equation-titles = 'true'">
+<xsl:value-of select="util:carriage-returns(1)"/>
+<xsl:text xml:space="preserve">.FILL IN TITLE</xsl:text>
+</xsl:when>
+<xsl:otherwise>
+.<xsl:apply-templates mode="title"/>
+</xsl:otherwise>
+</xsl:choose>
+++++++++++++++++++++++++++++++++++++++
+<xsl:apply-templates/>
+++++++++++++++++++++++++++++++++++++++
+  </xsl:when>
+  <!-- If nested docbook or mediaobject, just pass through-->  
+  <xsl:otherwise>
+<xsl:choose>
+<xsl:when test="$add-equation-titles = 'true'">
+<xsl:text xml:space="preserve">.FILL IN TITLE</xsl:text>
+</xsl:when>
+<xsl:otherwise>
+.<xsl:apply-templates mode="title"/>
+</xsl:otherwise>
+</xsl:choose>
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+  </xsl:otherwise>
+</xsl:choose>
+<xsl:value-of select="util:carriage-returns(1)"/>
+</xsl:template>
+
+<xsl:template match="informalequation">
+<xsl:choose>
+  <!-- If nested latex, use the macro -->
+  <xsl:when test="mathphrase[@role='tex']">
+<xsl:text xml:space="preserve">[latexmath]</xsl:text>
+++++++++++++++++++++++++++++++++++++++
+<xsl:apply-templates/>
+++++++++++++++++++++++++++++++++++++++
+  </xsl:when>
+  <!-- If nested docbook or mediaobject, just pass through-->  
+  <xsl:otherwise>
+++++++++++++++++++++++++++++++++++++++
+<xsl:copy-of select="."/>
+++++++++++++++++++++++++++++++++++++++
+  </xsl:otherwise>
+</xsl:choose>
+<xsl:value-of select="util:carriage-returns(1)"/>
+</xsl:template>
+
+<xsl:template match="inlineequation">
+  <xsl:choose>
+  <xsl:when test="mathphrase[@role='tex']">
+latexmath:[<xsl:copy-of select="."/>]
+  </xsl:when>
+  <xsl:otherwise>
+pass:[<xsl:copy-of select="."/>]    
+  </xsl:otherwise>
+</xsl:choose>
 </xsl:template>
 
 
