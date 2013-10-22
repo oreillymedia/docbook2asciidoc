@@ -2,7 +2,7 @@ This is a stylesheet for transforming DocBook 4.5 to http://www.methods.co.nz/as
 
 == Dependencies 
 
-The XSLT is written in XSLT 2.0, so you'll need to run it with an XSLT 2.0 processor. You can use http://sourceforge.net/projects/saxon/files/Saxon-HE/9.2/saxonhe9-2-1-5j.zip/download[Saxon], which is included in this repo..
+The XSLT is written in XSLT 2.0, so you'll need to run it with an XSLT 2.0 processor. You can use http://sourceforge.net/projects/saxon/files/Saxon-HE/9.2/saxonhe9-2-1-5j.zip/download[Saxon], which is included in this repo.
 
 == Run It
 
