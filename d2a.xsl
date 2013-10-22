@@ -20,6 +20,8 @@
 <xsl:param name="bookinfo-doc-name">book-docinfo.xml</xsl:param>
 <xsl:param name="strip-indexterms">false</xsl:param>
 <xsl:param name="glossary-passthrough">false</xsl:param>
+<!-- Use only for DocBook books that have numbered equations but no titles -->
+<!-- Set a value of "true" to pass through a placeholder title -->
 <xsl:param name="add-equation-titles">false</xsl:param>
 
 <xsl:preserve-space elements="*"/>
