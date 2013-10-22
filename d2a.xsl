@@ -20,8 +20,6 @@
 <xsl:param name="bookinfo-doc-name">book-docinfo.xml</xsl:param>
 <xsl:param name="strip-indexterms">false</xsl:param>
 <xsl:param name="glossary-passthrough">false</xsl:param>
-<!-- Use only for DocBook books that have numbered equations but no titles -->
-<!-- Set a value of "true" to pass through a placeholder title -->
 <xsl:param name="add-equation-titles">false</xsl:param>
 
 <xsl:preserve-space elements="*"/>
@@ -757,6 +755,8 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
   <xsl:when test="mathphrase[@role='tex']">
 <xsl:text xml:space="preserve">[latexmath]</xsl:text>
 <xsl:choose>
+<!-- Set the below parameter to "true" only for DocBook books that have numbered equations but no titles -->
+<!-- This will pass through a placeholder title -->
 <xsl:when test="$add-equation-titles = 'true'">
 <xsl:value-of select="util:carriage-returns(1)"/>
 <xsl:text xml:space="preserve">.FILL IN TITLE</xsl:text>
