@@ -1198,9 +1198,25 @@ pass:[<xsl:copy-of select="."/>]
 
 
 <xsl:template match="footnote">
-  <xsl:text>footnote:[</xsl:text>
-  <xsl:apply-templates/>
-  <xsl:text>]</xsl:text>
+  <!-- When footnote has @id, output as footnoteref with @id value, 
+       in case there are any corresponding footnoteref elements -->
+  <xsl:choose>
+    <xsl:when test="@id">
+      <xsl:text>footnoteref:[</xsl:text>
+      <xsl:value-of select="@id"/><xsl:text>,</xsl:text>
+      <xsl:apply-templates/>
+      <xsl:text>]</xsl:text>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:text>footnote:[</xsl:text>
+      <xsl:apply-templates/>
+      <xsl:text>]</xsl:text>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+  
+<xsl:template match="footnoteref">
+  <xsl:text>footnoteref:[</xsl:text><xsl:value-of select="@linkend"/><xsl:text>]</xsl:text>
 </xsl:template>
 
 <xsl:template match="section">
