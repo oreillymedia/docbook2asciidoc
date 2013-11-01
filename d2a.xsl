@@ -529,6 +529,11 @@ ____
 <xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
+<!-- Handling for inline quote elements -->
+<xsl:template match="quote">
+  <xsl:text>"</xsl:text><xsl:apply-templates/><xsl:text>"</xsl:text>
+</xsl:template>
+
 <xsl:template match="entry/para|entry/simpara">
 <xsl:call-template name="process-id"/>
 <xsl:apply-templates select="node()"/>
