@@ -76,6 +76,7 @@
   <xsl:variable name="part_content">
     <!-- Title and partintro (if present) -->
     <xsl:call-template name="process-id"/>
+    <xsl:text>&#10;</xsl:text>
     <xsl:text xml:space="preserve">= </xsl:text>
     <xsl:apply-templates select="title"/>
     <xsl:value-of select="util:carriage-returns(2)"/>
@@ -260,7 +261,7 @@
 </xsl:template>
   
 <!-- Special handling for text inside code block that will be converted as Asciidoc, 
-      to make sure special characters are not escaped. -->
+      to make sure special characters are not escaped.-->
 <xsl:template match="text()" mode="code">
   <xsl:value-of select="." disable-output-escaping="yes"></xsl:value-of>
 </xsl:template>
@@ -676,7 +677,7 @@ ____
 <xsl:template match="variablelist">
   <xsl:choose>
     <!-- When variablelist has a varlistentry with more than one term, or a nested variablelist, output as passthrough -->
-    <xsl:when test="varlistentry/term[2] | //variablelist">
+    <xsl:when test="./varlistentry/term[2] | .//variablelist">
       <xsl:text>
 ++++
 </xsl:text>
