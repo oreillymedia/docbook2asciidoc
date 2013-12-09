@@ -559,8 +559,9 @@ ____
 <xsl:call-template name="process-id"/>
 [<xsl:value-of select="upper-case(name())"/>]
 <xsl:apply-templates select="." mode="title"/>====
-<xsl:apply-templates select="node()[not(self::title)]"/>====
-<!-- <xsl:value-of select="util:carriage-returns(2)"/> -->
+<xsl:apply-templates select="node()[not(self::title)]"/>
+====
+<xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
 <xsl:template match="term"><xsl:apply-templates select="node()"/>:: </xsl:template>
@@ -729,7 +730,6 @@ ____
   <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
 </xsl:if>
 <xsl:call-template name="process-id"/>
-<xsl:text>&#10;</xsl:text>
 <xsl:text>.</xsl:text><xsl:apply-templates select="title"/>
 image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fileref"/>[]
 <xsl:choose>
@@ -741,7 +741,6 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:template match="informalfigure">
 <xsl:value-of select="util:carriage-returns(1)"/>
 <xsl:call-template name="process-id"/>
-<xsl:text>&#10;</xsl:text>
 image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fileref"/>[]
 <xsl:value-of select="util:carriage-returns(1)"/>
 </xsl:template>
@@ -1263,7 +1262,7 @@ pass:[<xsl:copy-of select="."/>]
   <xsl:if test="@id">
     <xsl:text xml:space="preserve">[[</xsl:text>
     <xsl:value-of select="@id"/>
-    <xsl:text xml:space="preserve">]]</xsl:text>
+    <xsl:text xml:space="preserve">]]&#10;</xsl:text>
   </xsl:if>
 </xsl:template>
 
