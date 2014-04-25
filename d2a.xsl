@@ -256,10 +256,6 @@
   </xsl:template>
 <!-- END INDEX HANDLING -->
 
-<xsl:template match="para/text()">
-<xsl:value-of select="replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm')"/>
-</xsl:template>
-  
 <!-- Special handling for text inside code block that will be converted as Asciidoc, 
       to make sure special characters are not escaped.-->
 <xsl:template match="text()" mode="code">
@@ -304,6 +300,11 @@
 
 <xsl:template match="member/text()">
 <xsl:value-of select="replace(., '^\s+', '', 'm')"/>
+</xsl:template>
+
+<!-- Normalize space in indexterms -->
+<xsl:template match="indexterm//text()">
+  <xsl:value-of select="normalize-space(.)"/>
 </xsl:template>
 
 <!-- Output bookinfo children into book-docinfo.xml -->
@@ -385,14 +386,51 @@
 <!-- Use passthrough for sect4 and sect5, as there is no AsciiDoc markup/formatting for these -->
 <xsl:template match="sect4|sect5">
 ++++++++++++++++++++++++++++++++++++++
-<xsl:copy-of select="."/>
+<xsl:choose>
+  <xsl:when test="$strip-indexterms='false'">
+    <xsl:copy-of select="."/>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <xsl:apply-templates mode="copy-and-drop-indexterms"/>
+    </xsl:copy>
+  </xsl:otherwise>
+</xsl:choose>
 ++++++++++++++++++++++++++++++++++++++
 </xsl:template>
-  
+
 <!-- Use passthrough for bibliography -->
 <xsl:template match="bibliography">
 ++++++++++++++++++++++++++++++++++++++
-<xsl:copy-of select="."/>
+<xsl:choose>
+  <xsl:when test="$strip-indexterms='false'">
+    <xsl:copy-of select="."/>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <xsl:apply-templates mode="copy-and-drop-indexterms"/>
+    </xsl:copy>
+  </xsl:otherwise>
+</xsl:choose>
+++++++++++++++++++++++++++++++++++++++
+</xsl:template>
+
+<!-- Use passthrough for reference sections -->
+<xsl:template match="refentry">
+++++++++++++++++++++++++++++++++++++++
+<xsl:choose>
+  <xsl:when test="$strip-indexterms='false'">
+    <xsl:copy-of select="."/>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <xsl:apply-templates mode="copy-and-drop-indexterms"/>
+    </xsl:copy>
+  </xsl:otherwise>
+</xsl:choose>
 ++++++++++++++++++++++++++++++++++++++
 </xsl:template>
 
@@ -401,11 +439,19 @@
   <xsl:choose>
     <xsl:when test="$glossary-passthrough != 'false'">
 <xsl:call-template name="process-id"/>
-<xsl:text>== Glossary
-      
-[glossary]</xsl:text>
+<xsl:text>[glossary]
+== Glossary
+
+</xsl:text>
 ++++++++++++++++++++++++++++++++++++++
-<xsl:copy-of select="*[not(local-name() = 'title')]"/>
+<xsl:choose>
+  <xsl:when test="$strip-indexterms='false'">
+    <xsl:copy-of select="*[not(local-name() = 'title')]"/>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:apply-templates select="*[not(self::title)]" mode="copy-and-drop-indexterms"/>
+  </xsl:otherwise>
+</xsl:choose>
 ++++++++++++++++++++++++++++++++++++++
     </xsl:when>
     <xsl:otherwise>
@@ -559,8 +605,7 @@ ____
 <xsl:call-template name="process-id"/>
 [<xsl:value-of select="upper-case(name())"/>]
 <xsl:apply-templates select="." mode="title"/>====
-<xsl:apply-templates select="node()[not(self::title)]"/>
-====
+<xsl:apply-templates select="node()[not(self::title)]"/>====
 <xsl:value-of select="util:carriage-returns(2)"/>
 </xsl:template>
 
@@ -612,7 +657,7 @@ ____
   </xsl:template>
 
   <xsl:template match="literal | code"><xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or child::replaceable or following-sibling::node()[1][self::emphasis] or preceding-sibling::text()[matches(., '\S$')] or (following-sibling::text()[1][matches(., '^\S.*?') and not(matches(., '^\..*?')) and not(matches(., '^,.*?'))])">+</xsl:if>+<xsl:if test='contains(., "+") or contains(., "&apos;") or contains(., "_")'>$$</xsl:if><xsl:apply-templates/><xsl:if test='contains(., "+") or contains(., "&apos;") or contains(., "_")'>$$</xsl:if>+<xsl:if test="preceding-sibling::node()[1][self::replaceable] or following-sibling::node()[1][self::replaceable] or child::replaceable or following-sibling::node()[1][self::emphasis] or preceding-sibling::text()[matches(., '\S$')] or (following-sibling::text()[1][matches(., '^\S.*?') and not(matches(., '^\..*?')) and not(matches(., '^,.*?'))])">+</xsl:if></xsl:template>
-  <xsl:template match="literal/text()"><xsl:value-of select="replace(., '([\[\]\*\^~])', '\\$1', 'm')"></xsl:value-of></xsl:template>
+  <xsl:template match="literal/text()"><xsl:value-of select="replace(replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm'), '([\[\]\*\^~])', '\\$1', 'm')"></xsl:value-of></xsl:template>
   
 <xsl:template match="userinput">**`<xsl:apply-templates />`**</xsl:template>
   <!-- Normalize-space() on text node below includes extra handling for child elements of userinput, to add needed spaces back in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
@@ -681,8 +726,18 @@ ____
       <xsl:text>
 ++++
 </xsl:text>
+  <xsl:choose>
+    <xsl:when test="$strip-indexterms='false'">
       <xsl:copy-of select="."/>
-      <xsl:text>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:copy>
+        <xsl:copy-of select="@*"/>
+        <xsl:apply-templates mode="copy-and-drop-indexterms"/>
+      </xsl:copy>
+    </xsl:otherwise>
+  </xsl:choose>
+  <xsl:text>
 ++++</xsl:text>
       <xsl:value-of select="util:carriage-returns(2)"/>
     </xsl:when>
@@ -748,9 +803,9 @@ image::<xsl:value-of select="mediaobject/imageobject[@role='web']/imagedata/@fil
 <xsl:template match="inlinemediaobject">image:<xsl:value-of select="imageobject[@role='web']/imagedata/@fileref"/>[]</xsl:template>
   
 <xsl:template match="literallayout">
-  ....
-  <xsl:apply-templates/>
-  ....
+....
+<xsl:apply-templates/>
+....
 </xsl:template>
 
 <!-- BEGIN EQUATION HANDLING -->
@@ -831,18 +886,38 @@ pass:[<xsl:copy-of select="."/>]
       <!-- When example code contains callouts -->
       <xsl:when test="//co">
         <xsl:choose>
-          <!-- When example code contains other inlines besides callouts output as Docbook passthrough -->
+          <!-- When example code contains other inlines besides callouts, output as Docbook passthrough -->
           <xsl:when test="descendant::*[*[not(self::co)]]">
 ++++++++++++++++++++++++++++++++++++++
-<xsl:copy-of select="."/>
+<xsl:choose>
+  <xsl:when test="$strip-indexterms='false'">
+    <xsl:copy-of select="."/>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <xsl:apply-templates mode="copy-and-drop-indexterms"/>
+    </xsl:copy>
+  </xsl:otherwise>
+</xsl:choose>
 ++++++++++++++++++++++++++++++++++++++
             
           </xsl:when>
-          <!-- When example code is in a different section than corresponding calloutlist
+          <!-- When example code is in a different section than corresponding calloutlist,
                           output as Docbook passthrough-->
           <xsl:when test="parent::node() != */co/id(@linkends)/parent::calloutlist/parent::node()">
 ++++++++++++++++++++++++++++++++++++++
-<xsl:copy-of select="."/>
+<xsl:choose>
+  <xsl:when test="$strip-indexterms='false'">
+    <xsl:copy-of select="."/>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <xsl:apply-templates mode="copy-and-drop-indexterms"/>
+    </xsl:copy>
+  </xsl:otherwise>
+</xsl:choose>
 ++++++++++++++++++++++++++++++++++++++
 
 </xsl:when>
@@ -900,7 +975,17 @@ pass:[<xsl:copy-of select="."/>]
           <!-- When example code contains inline elements, output as Docbook passthrough -->
           <xsl:when test="example[descendant::*[*]]">
 ++++++++++++++++++++++++++++++++++++++
-<xsl:copy-of select="."/>
+<xsl:choose>
+  <xsl:when test="$strip-indexterms='false'">
+    <xsl:copy-of select="."/>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:copy>
+      <xsl:copy-of select="@*"/>
+      <xsl:apply-templates mode="copy-and-drop-indexterms"/>
+    </xsl:copy>
+  </xsl:otherwise>
+</xsl:choose>
 ++++++++++++++++++++++++++++++++++++++
             
 </xsl:when>
@@ -964,7 +1049,8 @@ pass:[<xsl:copy-of select="."/>]
           <xsl:when test="*[not(self::co) and not(indexterm)]">
             <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
               <xsl:value-of select="util:carriage-returns(1)"/>
-            </xsl:if>++++++++++++++++++++++++++++++++++++++
+            </xsl:if>
+++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
@@ -973,7 +1059,8 @@ pass:[<xsl:copy-of select="."/>]
           <xsl:when test="not(self::*/parent::node() = co/id(@linkends)/parent::calloutlist/parent::node())">
             <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
               <xsl:value-of select="util:carriage-returns(1)"/>
-            </xsl:if>++++++++++++++++++++++++++++++++++++++
+            </xsl:if>
+++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
@@ -982,7 +1069,8 @@ pass:[<xsl:copy-of select="."/>]
           <xsl:when test="indexterm and $strip-indexterms='false'">
             <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
               <xsl:value-of select="util:carriage-returns(1)"/>
-            </xsl:if>++++++++++++++++++++++++++++++++++++++
+            </xsl:if>
+++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
@@ -1041,7 +1129,8 @@ pass:[<xsl:copy-of select="."/>]
           <xsl:when test="*[not(self::indexterm)]">
             <xsl:if test="ancestor::listitem and preceding-sibling::element()">
               <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
-            </xsl:if>++++++++++++++++++++++++++++++++++++++
+            </xsl:if>
+++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
@@ -1050,7 +1139,8 @@ pass:[<xsl:copy-of select="."/>]
           <xsl:when test="indexterm and $strip-indexterms='false'">
             <xsl:if test="ancestor::listitem and preceding-sibling::element()"><xsl:text>+</xsl:text>
               <xsl:value-of select="util:carriage-returns(1)"/>
-            </xsl:if>++++++++++++++++++++++++++++++++++++++
+            </xsl:if>
+++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
@@ -1116,14 +1206,16 @@ pass:[<xsl:copy-of select="."/>]
         <xsl:choose>
           <!-- When corresponding code block has inlines (besides co) and will be output as Docbook passthrough,
           also output calloutlist as Docbook passthrough-->
-          <xsl:when test="callout/id(@arearefs)/parent::*[*[not(self::co)]]">++++++++++++++++++++++++++++++++++++++
+          <xsl:when test="callout/id(@arearefs)/parent::*[*[not(self::co)]]">
+++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
 </xsl:when>
           <!-- When corresponding code block isn't in same section as calloutlist and will be output as Docbook passthrough,
           also output calloutlist as Docbook passthrough.-->
-          <xsl:when test="callout/id(@arearefs)/parent::*/parent::example/parent::node() != self::calloutlist/parent::node()">++++++++++++++++++++++++++++++++++++++
+          <xsl:when test="callout/id(@arearefs)/parent::*/parent::example/parent::node() != self::calloutlist/parent::node()">
+++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
@@ -1143,14 +1235,16 @@ pass:[<xsl:copy-of select="."/>]
         <xsl:choose>
           <!-- When corresponding code block has inlines (besides co) and will be output as Docbook passthrough,
           also output calloutlist as Docbook passthrough-->
-          <xsl:when test="callout/id(@arearefs)/parent::*[*[not(self::co)]]">++++++++++++++++++++++++++++++++++++++
+          <xsl:when test="callout/id(@arearefs)/parent::*[*[not(self::co)]]">
+++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
 </xsl:when>
           <!-- When corresponding code block isn't in same section as calloutlist and will be output as Docbook passthrough,
           also output calloutlist as Docbook passthrough.-->
-          <xsl:when test="callout/id(@arearefs)/parent::*/parent::node() != self::calloutlist/parent::node()">++++++++++++++++++++++++++++++++++++++
+          <xsl:when test="callout/id(@arearefs)/parent::*/parent::node() != self::calloutlist/parent::node()">
+++++++++++++++++++++++++++++++++++++++
 <xsl:copy-of select="."/>
 ++++++++++++++++++++++++++++++++++++++
 
@@ -1201,7 +1295,6 @@ pass:[<xsl:copy-of select="."/>]
       <xsl:value-of select="util:carriage-returns(1)"/>
     </xsl:if>
 </xsl:template>
-
 
 <xsl:template match="footnote">
   <!-- When footnote has @id, output as footnoteref with @id value, 
@@ -1274,5 +1367,12 @@ pass:[<xsl:copy-of select="."/>]
   </xsl:if>
 </xsl:template>
 
-</xsl:stylesheet>
+<xsl:template match="@*|node()" mode="copy-and-drop-indexterms">
+   <xsl:copy>
+     <xsl:apply-templates select="@*|node()" mode="copy-and-drop-indexterms"/>
+   </xsl:copy>
+</xsl:template>
 
+<xsl:template match="indexterm" mode="copy-and-drop-indexterms"/>
+
+</xsl:stylesheet>
