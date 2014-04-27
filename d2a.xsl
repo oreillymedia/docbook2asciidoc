@@ -516,9 +516,16 @@
       <xsl:call-template name="process-id"/>
     </xsl:otherwise>
   </xsl:choose>
-  <!-- If it's the 2nd+ para inside a listitem, glossdef, or callout, precede it with a plus symbol -->
+  <!-- If it's the 2nd+ para inside a listitem, glossdef, or callout (but not a nested admonition or sidebar), precede it with a plus symbol -->
 <xsl:if test="ancestor::listitem and preceding-sibling::element()">
-  <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
+  <xsl:choose>
+  <xsl:when test="not(ancestor::warning|ancestor::note|ancestor::caution|ancestor::tip|ancestor::important) and not(ancestor::sidebar)">
+    <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:value-of select="util:carriage-returns(1)"/>
+  </xsl:otherwise>
+</xsl:choose>
 </xsl:if>
 <xsl:if test="ancestor::glossdef and preceding-sibling::element()">
   <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
@@ -902,7 +909,7 @@ pass:[<xsl:copy-of select="."/>]
 </xsl:choose>
 ++++++++++++++++++++++++++++++++++++++
             
-          </xsl:when>
+</xsl:when>
           <!-- When example code is in a different section than corresponding calloutlist,
                           output as Docbook passthrough-->
           <xsl:when test="parent::node() != */co/id(@linkends)/parent::calloutlist/parent::node()">
