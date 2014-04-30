@@ -259,7 +259,7 @@
 <!-- Special handling for text inside code block that will be converted as Asciidoc, 
       to make sure special characters are not escaped.-->
 <xsl:template match="text()" mode="code">
-  <xsl:value-of select="." disable-output-escaping="yes"></xsl:value-of>
+  <xsl:value-of select=".[not(parent::title)]" disable-output-escaping="yes"></xsl:value-of>
 </xsl:template>
 
 <xsl:template match="phrase/text()"><xsl:text/><xsl:value-of select="replace(., '\n\s+', ' ', 'm')"/><xsl:text/></xsl:template>
