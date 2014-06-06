@@ -349,10 +349,83 @@
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
 
+<xsl:template match="prefaceinfo"/>
+
 <xsl:template match="preface">
 <xsl:call-template name="process-id"/>
-[preface]
-== <xsl:value-of select="title"/>
+<xsl:text>[preface]
+</xsl:text>
+
+<!--Gather Author name(s): -->
+<xsl:text>[</xsl:text>
+   <!-- For each author: -->
+   <xsl:for-each select="prefaceinfo/author">
+       <!--Dynamic retrieval of author number-->
+       <xsl:variable name="prefauth" select="position()" />
+       <!--Add a comma if 2nd+ author -->
+       <xsl:if test="$prefauth &gt; 1">
+          <xsl:text>, </xsl:text>
+       </xsl:if>
+       <xsl:choose>
+         <!-- if first author, don't append a number -->
+         <xsl:when test="$prefauth = 1">
+            <xsl:text>au=</xsl:text>
+         </xsl:when>
+         <!-- if 2nd or later author, append a number -->
+         <xsl:when test="$prefauth &gt; 1">
+            <xsl:value-of select="concat('au',$prefauth, '=')"/>
+         </xsl:when>
+       </xsl:choose> 
+       <xsl:text>"</xsl:text>
+       <!--Grabbing only specific children nodes, as affiliation nodes can also show up within author nods -->
+       <!--If firstname/surname:-->     
+       <xsl:if test="firstname">
+           <xsl:value-of select="firstname"/>
+       </xsl:if>
+       <xsl:if test="surname">
+           <xsl:text> </xsl:text><xsl:value-of select="surname"/>
+       </xsl:if>
+       <!--If othername:-->
+       <xsl:if test="othername">
+           <xsl:value-of select="othername"/>
+       </xsl:if>
+       <xsl:text>"</xsl:text>
+  </xsl:for-each>
+
+<!--Gather Author Affiliation(s):-->
+   <!--Test to see if there's not a date, not an affiliation OUTSIDE author, not an affiliation INSIDE author -->
+   <xsl:choose>
+     <!--If there's nothing, just close the tag and you're good-->
+     <xsl:when test="not(prefaceinfo//affiliation) and not(prefaceinfo/date)">
+        <xsl:text>]</xsl:text>
+     </xsl:when>
+     <xsl:otherwise>
+      <!--There can be multiple affiliations and multiple jobtitles or orgnames within each other. We need for-each's to select potentially multiple of all of these -->
+        <xsl:text>, auaffil="</xsl:text>         
+         <!--For each child affilation tag in prefaceinfo-->
+         <xsl:for-each select="prefaceinfo//affiliation">
+           <!--Commas for multiple jobtitle/orgname nodes within a single affiliation node-->
+           <xsl:value-of select="*" separator=", "/>
+           <!-- Comma Formatting For things separator doesn't get-->
+           <xsl:if test="not( position() = last() )">
+              <xsl:text>, </xsl:text>
+           </xsl:if>
+         </xsl:for-each>
+         <!--If Date, put it in:-->
+         <xsl:if test="prefaceinfo//date">
+            <!--only use a comma if there were preceding affiliation things-->
+            <xsl:if test="prefaceinfo//affiliation">
+                <xsl:text>, </xsl:text>
+            </xsl:if>
+            <xsl:value-of select="prefaceinfo//date"/>
+           </xsl:if>
+        <!-- close off the asciidioc tag -->
+        <xsl:text>"]</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+
+<xsl:text>
+== </xsl:text><xsl:value-of select="title"/>
 <xsl:value-of select="util:carriage-returns(2)"/>
   <xsl:apply-templates select="*[not(self::title)]"/>
 </xsl:template>
