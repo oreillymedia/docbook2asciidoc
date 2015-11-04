@@ -8,7 +8,15 @@ This project has a http://git-scm.com/book/en/v2/Git-Tools-Submodules[submodule]
 git clone --recursive git@github.com:oreillymedia/docbook2htmlbook.git
 ----
 
-To update the submodule once it's in your checkout, you can either cd into the subdirectory and git pull, or you can run this command:
+If you don't use ++--recursive++ to clone, you'll need to initialize the subdirectory as a separate couple steps:
+
+----
+$ cd docbook2htmlbook
+$ git submodule init
+$ git submodule update
+----
+
+To update the submodule from then on, you can either cd into the subdirectory and pull, or you can run this command:
 
 ----
 git submodule update --remote docbook2htmlbook
