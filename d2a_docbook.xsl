@@ -10,9 +10,11 @@
   <xsl:output-character character="&#xE801;" string="&lt;"/>
   <xsl:output-character character="&#xE802;" string="&gt;"/>
   <xsl:output-character character="&#xE803;" string="&amp;"/>
-  <xsl:output-character character='“' string="&amp;ldquo;"/>
-  <xsl:output-character character='”' string="&amp;rdquo;"/>
-  <xsl:output-character character="’" string="&amp;rsquo;"/>
+  <xsl:output-character character='“' string="&amp;#x201c;"/>
+  <xsl:output-character character='”' string="&amp;#x201d;"/>
+  <xsl:output-character character="’" string="&amp;#x2019;"/>
+<!--   <xsl:output-character character="{" string="&amp;#x7b;"/>
+  <xsl:output-character character="}" string="&amp;#x7d;"/> -->
 </xsl:character-map>
 
 <xsl:output method="xml" omit-xml-declaration="yes" use-character-maps="xml-reserved-chars"/>
@@ -698,9 +700,32 @@ ____
 <!-- BEGIN INLINE MARKUP HANDLING -->
 <xsl:template match="phrase"><xsl:apply-templates /></xsl:template>
 
-<xsl:template match="emphasis[@role='bold']|emphasis[@role='strong']">**<xsl:apply-templates />**</xsl:template>
+<xsl:template match="emphasis[@role='bold'][not(ancestor::programlisting)]|emphasis[@role='strong'][not(ancestor::programlisting)]">**<xsl:if test="(contains(., '~') or contains(., '_') or contains(., '^')) and not(descendant::*)">$$</xsl:if><xsl:apply-templates/><xsl:if test="(contains(., '~') or contains(., '_') or contains(., '^')) and not(descendant::*)">$$</xsl:if>**</xsl:template>
+
+<xsl:template match="emphasis[@role='strong'][ancestor::programlisting]">
+  <xsl:element name="strong"><xsl:copy-of select="node()"/></xsl:element>
+</xsl:template>
+
+<xsl:template match="emphasis[not(@role)][ancestor::programlisting]">
+  <xsl:element name="em"><xsl:copy-of select="node()"/></xsl:element>
+</xsl:template>
+
+<xsl:template match="emphasis[@role='roman'][ancestor::programlisting]">
+  <xsl:element name="phrase">
+    <xsl:attribute name="role">plain</xsl:attribute>
+    <xsl:copy-of select="@*|node()"/>
+  </xsl:element>
+</xsl:template>
+
+<xsl:template match="emphasis[@role='roman'][not(ancestor::programlisting)]">
+  <xsl:element name="phrase">
+    <xsl:attribute name="role">plain</xsl:attribute>
+    <xsl:copy-of select="@*|node()"/>
+  </xsl:element>
+</xsl:template>
 
   <xsl:template match="filename">__<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>__</xsl:template>
+
   <!-- Normalize-space() on text node below includes extra handling for child elements of filename, to add needed spaces back in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
   <xsl:template match="filename/text()">
     <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
@@ -712,9 +737,10 @@ ____
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="emphasis">__<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>__</xsl:template>
+  <xsl:template match="emphasis[not(ancestor::programlisting)]">__<xsl:if test="(contains(., '~') or contains(., '_') or contains(., '^')) and not(descendant::*)">$$</xsl:if><xsl:apply-templates/><xsl:if test="(contains(., '~') or contains(., '_') or contains(., '^')) and not(descendant::*)">$$</xsl:if>__</xsl:template>
+
   <!-- Normalize-space() on text node below includes extra handling for child elements of emphasis, to add needed spaces back in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
-  <xsl:template match="emphasis/text()">
+  <xsl:template match="emphasis[not(@role='roman')][not(ancestor::programlisting)]/text()">
     <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
       <xsl:text> </xsl:text>
     </xsl:if>
@@ -725,6 +751,7 @@ ____
   </xsl:template>
 
   <xsl:template match="command">__<xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if><xsl:apply-templates/><xsl:if test="contains(., '~') or contains(., '_')">$$</xsl:if>__</xsl:template>
+
   <!-- Normalize-space() on text node below includes extra handling for child elements of command, to add needed spaces back in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
   <xsl:template match="command/text()">
     <xsl:if test="preceding-sibling::* and (starts-with(.,' ') or starts-with(.,'&#10;'))">
@@ -736,10 +763,10 @@ ____
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="literal | code">++<xsl:if test='contains(., "+") or contains(., "&apos;") or contains(., "_")'>$$</xsl:if><xsl:apply-templates/><xsl:if test='contains(., "+") or contains(., "&apos;") or contains(., "_")'>$$</xsl:if>++</xsl:template>
+  <xsl:template match="literal | code">++<xsl:if test='(contains(., "+") or contains(., "&apos;") or contains(., "_") or contains(., "^") or contains(., "~")) and not(descendant::*)'>$$</xsl:if><xsl:apply-templates/><xsl:if test='(contains(., "+") or contains(., "&apos;") or contains(., "_") or contains(., "^") or contains(., "~")) and not(descendant::*)'>$$</xsl:if>++</xsl:template>
 
-  <xsl:template match="literal/text()"><xsl:value-of select="replace(replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm'), '([\[\]\*\^~])', '\\$1', 'm')"></xsl:value-of></xsl:template>
-  
+  <xsl:template match="literal/text()"><xsl:value-of select="replace(replace(replace(., '\n\s+', ' ', 'm'), 'C\+\+', '\$\$C++\$\$', 'm'), '([\*\^~])', '\\$1', 'm')"></xsl:value-of></xsl:template>
+
 <xsl:template match="userinput">**`<xsl:apply-templates />`**</xsl:template>
   <!-- Normalize-space() on text node below includes extra handling for child elements of userinput, to add needed spaces back in. (They're removed by normalize-space(), which normalizes the two text nodes separately.) -->
   <xsl:template match="userinput/text()">
@@ -793,7 +820,7 @@ ____
 
 <xsl:template match="ulink">link:$$<xsl:value-of select="@url" />$$[<xsl:apply-templates/>]</xsl:template>
 
-  <xsl:template match="email"><xsl:text>pass:[</xsl:text><xsl:element name="email"><xsl:value-of select="normalize-space(.)"/></xsl:element><xsl:text>]</xsl:text></xsl:template>
+  <xsl:template match="email"><xsl:text>pass:[</xsl:text><xsl:element name="a"><xsl:attribute name="href">mailto:<xsl:value-of select="normalize-space(.)"/></xsl:attribute><xsl:element name="em"><xsl:value-of select="normalize-space(.)"/></xsl:element></xsl:element><xsl:text>]</xsl:text></xsl:template>
 
 <xsl:template match="xref">&#xE801;&#xE801;<xsl:value-of select="@linkend" />&#xE802;&#xE802;</xsl:template>
 
@@ -809,7 +836,17 @@ ____
 </xsl:text>
   <xsl:choose>
     <xsl:when test="$strip-indexterms='false'">
-      <xsl:copy-of select="."/>
+<xsl:element name="dl"><xsl:text>
+</xsl:text>
+  <xsl:for-each select="varlistentry">
+    <xsl:for-each select="term">
+    <xsl:element name="dt"><xsl:copy-of select="self::term"/></xsl:element><xsl:text>
+</xsl:text>
+     </xsl:for-each>
+    <xsl:element name="dd"><xsl:copy-of select="listitem"/></xsl:element><xsl:text>
+</xsl:text>
+  </xsl:for-each>
+</xsl:element>
     </xsl:when>
     <xsl:otherwise>
       <xsl:copy>
@@ -1212,7 +1249,10 @@ pass:[<xsl:copy-of select="."/>]
               <xsl:text>+</xsl:text><xsl:value-of select="util:carriage-returns(1)"/>
             </xsl:if>
 ++++++++++++++++++++++++++++++++++++++
-<xsl:copy-of select="."/>
+<xsl:element name="pre">
+  <xsl:attribute name="data-type">programlisting</xsl:attribute>
+  <xsl:apply-templates select="@*|node()"/>
+</xsl:element>
 ++++++++++++++++++++++++++++++++++++++
 
 </xsl:when>
@@ -1344,7 +1384,7 @@ pass:[<xsl:copy-of select="."/>]
   </xsl:template>
   
 <!-- END CODE BLOCK HANDLING -->
-  
+
 
 <xsl:template match="table|informaltable">
 <xsl:call-template name="process-id"/>
@@ -1376,6 +1416,13 @@ pass:[<xsl:copy-of select="."/>]
       <xsl:value-of select="util:carriage-returns(1)"/>
     </xsl:if>
 </xsl:template>
+
+  <!-- <xsl:template match="*/text()[ancestor::table]|text()[ancestor::informaltable]"><xsl:value-of select="replace(., '\|', '\\|')"/></xsl:template> -->
+<!-- <xsl:if test="descendant::text()">
+  <xsl:for-each select="descendant::text()">
+  <xsl:value-of select="replace(., '\|', '\\|')"/>
+  </xsl:for-each>
+</xsl:if> -->
 
 <xsl:template match="footnote">
   <!-- When footnote has @id, output as footnoteref with @id value, 

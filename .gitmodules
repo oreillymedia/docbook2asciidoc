@@ -1,0 +1,3 @@
+[submodule "docbook2htmlbook"]
+	path = docbook2htmlbook
+	url = git@github.com:oreillymedia/docbook2htmlbook.git
