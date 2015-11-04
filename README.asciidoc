@@ -2,27 +2,39 @@ This is a stylesheet for transforming DocBook 4.5 to http://www.methods.co.nz/as
 
 == Dependencies 
 
+This project has a http://git-scm.com/book/en/v2/Git-Tools-Submodules[submodule] (https://github.com/oreillymedia/docbook2htmlbook). To clone down the repo with the submodule, use the ++--recursive++ flag:
+
+----
+git clone --recursive git@github.com:oreillymedia/docbook2htmlbook.git
+----
+
+To update the submodule once it's in your checkout, you can either cd into the subdirectory and git pull, or you can run this command:
+
+----
+git submodule update --remote docbook2htmlbook
+----
+
 The XSLT is written in XSLT 2.0, so you'll need to run it with an XSLT 2.0 processor. You can use http://sourceforge.net/projects/saxon/files/Saxon-HE/9.2/saxonhe9-2-1-5j.zip/download[Saxon], which is included in this repo.
 
 == Run It
 
-Run a command like this to output the AsciiDoc:
+Run a command like this on a consolidated DocBook file to output the AsciiDoc - use either d2a_docbook.xsl or d2a_htmlbook.xsl, depending on your project needs:
 
 ----
-java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl
+java -jar saxon9he.jar -s book.xml -o book.asciidoc d2a_docbook.xsl
 ----
 
 If you'd like the AsciiDoc output to be "chunked" into separate files for each preface/chapter/appendix, add the parameter
 +chunk-output=true+:
 
 ----
-java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl chunk-output=true
+java -jar saxon9he.jar -s book.xml -o book.asciidoc d2a_docbook.xsl chunk-output=true
 ----
 
 Content within <bookinfo> of the DocBook source will be output as XML to the filename specified in the parameter "bookinfo-doc-name". For example:
 
 ----
-java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl chunk-output=true bookinfo-doc-name="mybookinfo.xml"
+java -jar saxon9he.jar -s book.xml -o book.asciidoc d2a_docbook.xsl chunk-output=true bookinfo-doc-name="mybookinfo.xml"
 ----
 
 Default value of "bookinfo-doc-name" is "book-docinfo.xml"
@@ -31,11 +43,11 @@ Default value of "bookinfo-doc-name" is "book-docinfo.xml"
 
 * If you'd like the Glossary element to be output inside a DocBook passthrough, instead of Asciidoc markup, add the parameter +glossary-passthrough=true+:
 ----
-java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl glossary-passthrough=true
+java -jar saxon9he.jar -s book.xml -o book.asciidoc d2a_docbook.xsl glossary-passthrough=true
 ----
 * If you'd like to strip out the indexterm elements, use the parameter +strip-indexterms=true+:
 ----
-java -jar saxon9he.jar -s book.xml -o book.asc d2a.xsl strip-indexterms=true
+java -jar saxon9he.jar -s book.xml -o book.asciidoc d2a_docbook.xsl strip-indexterms=true
 ----
 
 == Example
@@ -45,7 +57,7 @@ This example shows how to run this script for a subversion repository
 First, you have to clone this repo so that you'll have the code.  
 
 ----
-$ git clone https://MakerPress@github.com/oreillymedia/docbook2asciidoc.git
+$ git clone --recursive https://MakerPress@github.com/oreillymedia/docbook2asciidoc.git
 ----
 
 Second, pull down the repo for the book you want:
@@ -65,7 +77,7 @@ $ cd test
 Finally, run the file command to convert the big docbook file into separate asciidoc files.  Note that you'll need Java 1.5 [*NEED TO CONFIRM VERSION*] or higher.  You'll also need to add hardcoded paths to the saxon jar file and to :
 
 ----
-java -jar /Users/odewahn/Desktop/docbook2asciidoc/saxon9he.jar -s /Users/odewahn/Desktop/9781449307110/current/book.xml -o book.asc /Users/odewahn/Desktop/docbook2asciidoc/d2a.xsl chunk-output=true
+java -jar /Users/odewahn/Desktop/docbook2asciidoc/saxon9he.jar -s /Users/odewahn/Desktop/9781449307110/current/book.xml -o book.asciidoc /Users/odewahn/Desktop/docbook2asciidoc/d2a_docbook.xsl chunk-output=true
 ----
 
 
