@@ -455,7 +455,7 @@
      <xsl:otherwise>
       <!--There can be multiple affiliations and multiple jobtitles or orgnames within each other. We need for-each's to select potentially multiple of all of these -->
         <xsl:text>, auaffil="</xsl:text>         
-         <!--For each child affilation tag in prefaceinfo-->
+         <!--For each child affiliation tag in prefaceinfo-->
          <xsl:for-each select="prefaceinfo//affiliation">
            <!--Commas for multiple jobtitle/orgname nodes within a single affiliation node-->
            <xsl:value-of select="*" separator=", "/>
@@ -472,7 +472,7 @@
             </xsl:if>
             <xsl:value-of select="prefaceinfo//date"/>
            </xsl:if>
-        <!-- close off the asciidioc tag -->
+        <!-- close off the asciidoc tag -->
         <xsl:text>"]</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
@@ -569,7 +569,7 @@
 </xsl:template>
 
 <!-- Output glossary "See Also"s as hardcoded text. Asc to DB toolchain does not 
-    currently retain any @id attrbutes for glossentry elements. -->
+    currently retain any @id attributes for glossentry elements. -->
 <xsl:template match="glossseealso" mode="d2a">
   <xsl:choose>
     <xsl:when test="preceding-sibling::para">
@@ -708,7 +708,7 @@ ____
       <xsl:when test="self::emphasis[not(@role)] or self::filename or self::uri">__</xsl:when>
       <xsl:when test="self::emphasis[@role='bold' or @role='strong']">**</xsl:when>
       <!-- <xsl:when test="self::literal or self::code">++</xsl:when> -->
-      <xsl:when test="self::literal or self::code or self::command or self::option or self::computeroutput or self::varname or self::classname or self::code or self::envar or self::constant or self::function or self::methodname or self::package or self::paramater or self::property">++</xsl:when>
+      <xsl:when test="self::literal or self::code or self::command or self::option or self::computeroutput or self::varname or self::classname or self::code or self::envar or self::constant or self::function or self::methodname or self::package or self::parameter or self::property">++</xsl:when>
       <xsl:when test="self::superscript">^</xsl:when>
       <xsl:when test="self::subscript">~</xsl:when>
     </xsl:choose>
@@ -720,7 +720,7 @@ ____
 
 <xsl:template match="replaceable" mode="d2a">
 <xsl:choose>
-  <xsl:when test="parent::literal or parent::code or parent::command or parent::option or parent::computeroutput or parent::varname or parent::classname or parent::code or parent::envar or parent::constant or parent::function or parent::methodname or parent::package or parent::paramater or parent::property">__<xsl:apply-templates mode="d2a"/>__</xsl:when>
+  <xsl:when test="parent::literal or parent::code or parent::command or parent::option or parent::computeroutput or parent::varname or parent::classname or parent::code or parent::envar or parent::constant or parent::function or parent::methodname or parent::package or parent::parameter or parent::property">__<xsl:apply-templates mode="d2a"/>__</xsl:when>
   <xsl:otherwise>__++<xsl:apply-templates mode="d2a"/>++__</xsl:otherwise>
 </xsl:choose>
 </xsl:template>

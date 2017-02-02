@@ -404,7 +404,7 @@
      <xsl:otherwise>
       <!--There can be multiple affiliations and multiple jobtitles or orgnames within each other. We need for-each's to select potentially multiple of all of these -->
         <xsl:text>, auaffil="</xsl:text>         
-         <!--For each child affilation tag in prefaceinfo-->
+         <!--For each child affiliation tag in prefaceinfo-->
          <xsl:for-each select="prefaceinfo//affiliation">
            <!--Commas for multiple jobtitle/orgname nodes within a single affiliation node-->
            <xsl:value-of select="*" separator=", "/>
@@ -421,7 +421,7 @@
             </xsl:if>
             <xsl:value-of select="prefaceinfo//date"/>
            </xsl:if>
-        <!-- close off the asciidioc tag -->
+        <!-- close off the asciidoc tag -->
         <xsl:text>"]</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
@@ -541,7 +541,7 @@
 </xsl:template>
 
 <!-- Output glossary "See Also"s as hardcoded text. Asc to DB toolchain does not 
-    currently retain any @id attrbutes for glossentry elements. -->
+    currently retain any @id attributes for glossentry elements. -->
 <xsl:template match="glossseealso">
   <xsl:choose>
     <xsl:when test="preceding-sibling::para">

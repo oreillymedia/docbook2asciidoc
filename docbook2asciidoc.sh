@@ -39,7 +39,7 @@ OPTIONS:
    -s      Source directory to scan for files, by default the working directory
    -x      Extension of files to convert, by default 'xml'
    -o      Output extension, by default 'asciidoc'
-   -r      Enable recusive scanning, by default the scan is not recursive
+   -r      Enable recursive scanning, by default the scan is not recursive
    -h      Shows this message
 EOF
 }
